@@ -13,9 +13,10 @@
         .card-glass { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(51, 65, 85, 0.5); backdrop-filter: blur(10px); }
         .dropdown-content { display: none; position: absolute; background-color: #1e293b; min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5); z-index: 100; border-radius: 12px; border: 1px solid #334155; margin-top: 8px; right: 0; }
         .dropdown:hover .dropdown-content { display: block; }
-        .stat-card { border-radius: 24px; padding: 1.5rem; transition: all 0.3s ease; border: 2px solid transparent; }
-        .stat-card:hover { transform: translateY(-5px); border-color: #3b82f6; }
+        .stat-card { border-radius: 24px; padding: 1.5rem; transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer; }
+        .stat-card:hover { transform: translateY(-5px); border-color: #3b82f6; background: rgba(59, 130, 246, 0.05); }
         .active-btn { background-color: #2563eb !important; color: white !important; }
+        .active-card { border-color: #3b82f6 !important; background: rgba(59, 130, 246, 0.1) !important; }
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen">
@@ -27,29 +28,22 @@
             </div>
             <h1 class="text-2xl font-bold tracking-tight text-white uppercase">CASS <span class="text-blue-400 font-light">DASHBOARD</span></h1>
         </div>
-
-        <div class="flex flex-wrap gap-3">
-            <div class="dropdown relative">
-                <button id="dropBtn" class="bg-blue-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-2">
-                    เลือกสถานที่ <i data-lucide="chevron-down" class="w-4 h-4"></i>
-                </button>
-                <div id="locationDropdown" class="dropdown-content overflow-hidden">
-                    </div>
-            </div>
+        <div class="dropdown relative">
+            <button id="dropBtn" class="bg-blue-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-2">
+                เลือกสถานที่ <i data-lucide="chevron-down" class="w-4 h-4"></i>
+            </button>
+            <div id="locationDropdown" class="dropdown-content"></div>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto">
-        <div class="mb-10 border-l-4 border-blue-500 pl-8 text-white uppercase tracking-tighter italic">
-            <h2 id="locName" class="text-5xl font-bold mb-2">กำลังโหลด...</h2>
-            <div class="flex flex-col gap-1 text-slate-400 text-sm tracking-widest not-italic uppercase">
-                <p id="locDetail">อำเภอเมืองสกลนคร · จังหวัดสกลนคร</p>
-                <p id="locCoords" class="font-mono text-blue-400/80 tracking-normal">LAT: -- | LON: --</p>
-            </div>
+        <div class="mb-10 border-l-4 border-blue-500 pl-8 text-white italic">
+            <h2 id="locName" class="text-5xl font-bold mb-2 uppercase">กำลังโหลด...</h2>
+            <p id="locCoords" class="font-mono text-blue-400/80 text-sm">LAT: -- | LON: --</p>
         </div>
 
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            <div class="card-glass stat-card border-orange-500/30">
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+            <div id="card-temp_c" onclick="setMetric('temp_c')" class="card-glass stat-card active-card">
                 <div class="flex justify-between items-start mb-4">
                     <div class="p-2 bg-orange-500/10 rounded-xl text-orange-500"><i data-lucide="thermometer" class="w-5 h-5"></i></div>
                     <span class="text-[9px] font-bold opacity-40 uppercase">Temp</span>
@@ -58,7 +52,8 @@
                     <span id="statTemp" class="text-3xl font-bold text-white">--</span><span class="text-slate-500">°C</span>
                 </div>
             </div>
-            <div class="card-glass stat-card border-blue-500/30">
+
+            <div id="card-rh" onclick="setMetric('rh')" class="card-glass stat-card">
                 <div class="flex justify-between items-start mb-4">
                     <div class="p-2 bg-blue-500/10 rounded-xl text-blue-500"><i data-lucide="droplets" class="w-5 h-5"></i></div>
                     <span class="text-[9px] font-bold opacity-40 uppercase">Humid</span>
@@ -67,7 +62,8 @@
                     <span id="statHumid" class="text-3xl font-bold text-white">--</span><span class="text-slate-500">%</span>
                 </div>
             </div>
-            <div class="card-glass stat-card border-indigo-500/30">
+
+            <div id="card-wind_ms" onclick="setMetric('wind_ms')" class="card-glass stat-card">
                 <div class="flex justify-between items-start mb-4">
                     <div class="p-2 bg-indigo-500/10 rounded-xl text-indigo-500"><i data-lucide="wind" class="w-5 h-5"></i></div>
                     <span class="text-[9px] font-bold opacity-40 uppercase">Wind</span>
@@ -76,38 +72,35 @@
                     <span id="statWind" class="text-3xl font-bold text-white">--</span><span class="text-slate-500">m/s</span>
                 </div>
             </div>
-            <div class="card-glass stat-card border-emerald-500/30">
-                <div class="flex justify-between items-start mb-4">
-                    <div class="p-2 bg-emerald-500/10 rounded-xl text-emerald-500"><i data-lucide="cloud-rain" class="w-5 h-5"></i></div>
-                    <span class="text-[9px] font-bold opacity-40 uppercase">Rain</span>
-                </div>
-                <div class="flex items-baseline gap-1">
-                    <span id="statRain" class="text-3xl font-bold text-white">--</span><span class="text-slate-500">mm</span>
-                </div>
-            </div>
-            <div class="card-glass stat-card border-slate-500/20">
+
+            <div id="card-cloud_lv14" onclick="setMetric('cloud_lv14')" class="card-glass stat-card">
                 <div class="flex justify-between items-start mb-4">
                     <div class="p-2 bg-slate-500/10 rounded-xl text-slate-300"><i data-lucide="cloud" class="w-5 h-5"></i></div>
                     <span class="text-[9px] font-bold opacity-40 uppercase">Cloud</span>
                 </div>
-                <div id="statCloud" class="flex items-baseline gap-1 font-bold text-white">--<span class="text-slate-500 text-sm ml-1">%</span></div>
+                <div class="flex items-baseline gap-1">
+                    <span id="statCloud" class="text-3xl font-bold text-white">--</span><span class="text-slate-500">%</span>
+                </div>
             </div>
-            <div class="card-glass stat-card border-yellow-500/20">
+
+            <div id="card-solar_w" onclick="setMetric('solar_w')" class="card-glass stat-card lg:col-span-1 col-span-2">
                 <div class="flex justify-between items-start mb-4">
                     <div class="p-2 bg-yellow-500/10 rounded-xl text-yellow-500"><i data-lucide="sun" class="w-5 h-5"></i></div>
                     <span class="text-[9px] font-bold opacity-40 uppercase">Solar</span>
                 </div>
-                <div id="statSolar" class="flex items-baseline gap-1 font-bold text-white">--<span class="text-slate-500 text-sm ml-1">W/m²</span></div>
+                <div class="flex items-baseline gap-1">
+                    <span id="statSolar" class="text-3xl font-bold text-white">--</span><span class="text-slate-500 text-xs">W/m²</span>
+                </div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
             <div class="lg:col-span-2 card-glass p-8 rounded-[32px]">
                 <div class="flex justify-between items-center mb-8">
-                    <h3 id="chartTitle" class="font-bold text-lg text-white uppercase tracking-widest">แนวโน้มอุณหภูมิ รายชั่วโมง (°C)</h3>
+                    <h3 id="chartTitle" class="font-bold text-lg text-white uppercase tracking-widest">แนวโน้มวันนี้</h3>
                     <div class="flex gap-2 bg-slate-800/50 p-1 rounded-xl">
                         <button id="btnHourly" onclick="updateChartMode('hourly')" class="active-btn text-slate-400 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">รายชั่วโมง</button>
-                        <button id="btnDaily" onclick="updateChartMode('daily')" class="text-slate-400 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">7 วัน</button>
+                        <button id="btnDaily" onclick="updateChartMode('daily')" class="text-slate-400 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">7 วัน (เฉลี่ย)</button>
                     </div>
                 </div>
                 <div class="h-[350px] w-full">
@@ -116,9 +109,8 @@
             </div>
 
             <div class="card-glass p-8 rounded-[32px]">
-                <h4 id="sideTitle" class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-10 text-center">รายละเอียดตามช่วงเวลา</h4>
-                <div id="sideContainer" class="grid grid-cols-2 gap-4">
-                    </div>
+                <h4 id="sideTitle" class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-10 text-center">รายละเอียด</h4>
+                <div id="sideContainer" class="grid grid-cols-2 gap-4"></div>
                 <div class="mt-8 text-center bg-slate-800/30 p-4 rounded-2xl">
                     <p class="text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed">
                         Data provided by <br><span class="text-blue-400 font-bold italic">WRF Simulation Model</span>
@@ -128,39 +120,34 @@
         </div>
     </main>
 
-    <footer class="text-center py-10 opacity-30 text-[10px] tracking-[0.5em] uppercase">
-        Designed and Developed by CASS &copy; 2026
-    </footer>
-
     <script>
         lucide.createIcons();
         let weatherChart;
         let weatherData = {};
-        let stationNames = [];
         let currentStation = "";
+        let currentMetric = 'temp_c';
         let currentMode = 'hourly';
-        let currentMetric = 'temp_c'; // ตัวแปรเริ่มต้น
 
-        // ตั้งค่าชื่อภาษาไทยและสีสำหรับแต่ละตัวแปร
-        const metricConfig = {
-            temp_c: { label: 'อุณหภูมิ (°C)', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' },
-            rh: { label: 'ความชื้น (%)', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
-            wind_ms: { label: 'ความเร็วลม (m/s)', color: '#818cf8', bg: 'rgba(129, 140, 248, 0.1)' },
-            solar_w: { label: 'ความเข้มแสง (W/m²)', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)' },
-            cloud_lv14: { label: 'ปริมาณเมฆ (%)', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)' }
+        // การตั้งค่าสีและหน่วยของแต่ละตัวแปร
+        const configMap = {
+            temp_c: { label: 'อุณหภูมิ', unit: '°C', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' },
+            rh: { label: 'ความชื้น', unit: '%', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
+            wind_ms: { label: 'ความเร็วลม', unit: 'm/s', color: '#818cf8', bg: 'rgba(129, 140, 248, 0.1)' },
+            solar_w: { label: 'ความเข้มแสง', unit: 'W/m²', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)' },
+            cloud_lv14: { label: 'ปริมาณเมฆ', unit: '%', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)' }
         };
 
         function initChart() {
             const ctx = document.getElementById('weatherChart').getContext('2d');
             weatherChart = new Chart(ctx, {
                 type: 'line',
-                data: { labels: [], datasets: [{ data: [], borderWidth: 4, tension: 0.4, fill: true }]},
+                data: { labels: [], datasets: [{ data: [], borderWidth: 3, tension: 0.3, fill: true, pointRadius: 2 }]},
                 options: { 
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: { 
-                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-                        x: { grid: { display: false }, ticks: { color: '#64748b' } } 
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 45, minRotation: 45 } } 
                     }
                 }
             });
@@ -170,39 +157,22 @@
             try {
                 const response = await fetch('weather_data_locations.json?t=' + Date.now());
                 weatherData = await response.json();
-                stationNames = Object.keys(weatherData);
-                renderDropdown();
-                if (!currentStation) currentStation = stationNames[0];
+                const stations = Object.keys(weatherData);
+                
+                const container = document.getElementById('locationDropdown');
+                container.innerHTML = stations.map(name => `
+                    <a href="#" onclick="updateUI('${name}')" class="block px-4 py-3 hover:bg-blue-600 text-sm border-t border-slate-700 first:border-0">${name}</a>
+                `).join('');
+
+                if (!currentStation) currentStation = stations[0];
                 updateUI(currentStation);
-            } catch (e) { console.error("Fetch error", e); }
+            } catch (e) { console.error("Error fetching JSON:", e); }
         }
 
-        function renderDropdown() {
-            const container = document.getElementById('locationDropdown');
-            container.innerHTML = stationNames.map(name => `
-                <a href="#" onclick="updateUI('${name}')" class="block px-4 py-3 hover:bg-blue-600 text-sm border-t border-slate-700 first:border-0">${name}</a>
-            `).join('');
-        }
-
-        // ฟังก์ชันคำนวณค่าเฉลี่ยรายวันจากข้อมูลรายชั่วโมง
-        function getDailyAverages(dataArray) {
-            const dailyMap = {};
-            dataArray.forEach(item => {
-                const date = item.datetime.split(' ')[0]; // เอาเฉพาะ YYYY-MM-DD
-                if (!dailyMap[date]) dailyMap[date] = { sum: 0, count: 0 };
-                dailyMap[date].sum += item[currentMetric];
-                dailyMap[date].count += 1;
-            });
-
-            return Object.keys(dailyMap).map(date => ({
-                date: new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }),
-                avg: (dailyMap[date].sum / dailyMap[date].count).toFixed(1)
-            }));
-        }
-
-        // ฟังก์ชันสลับตัวแปรที่จะโชว์บนกราฟ (เรียกจาก Card ด้านบน)
         function setMetric(metric) {
             currentMetric = metric;
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-card'));
+            document.getElementById(`card-${metric}`).classList.add('active-card');
             updateChartMode(currentMode);
         }
 
@@ -211,18 +181,14 @@
             const station = weatherData[name];
             const latest = station.data[station.data.length - 1];
 
-            document.getElementById('dropBtn').innerHTML = `${name} <i data-lucide="chevron-down" class="w-4 h-4"></i>`;
-            lucide.createIcons();
-
             document.getElementById('locName').innerText = name;
-            document.getElementById('locCoords').innerText = `LAT: ${station.metadata.actual_lat.toFixed(2)} | LON: ${station.metadata.actual_lon.toFixed(2)}`;
+            document.getElementById('locCoords').innerText = `LAT: ${station.metadata.actual_lat.toFixed(4)} | LON: ${station.metadata.actual_lon.toFixed(4)}`;
             
-            // อัปเดตตัวเลขหน้าหลัก
             document.getElementById('statTemp').innerText = latest.temp_c.toFixed(1);
             document.getElementById('statHumid').innerText = latest.rh.toFixed(0);
             document.getElementById('statWind').innerText = latest.wind_ms.toFixed(1);
-            document.getElementById('statSolar').innerHTML = `${latest.solar_w.toFixed(0)} <span class="text-xs opacity-50">W/m²</span>`;
-            document.getElementById('statCloud').innerHTML = `${latest.cloud_lv14.toFixed(0)} <span class="text-xs opacity-50">%</span>`;
+            document.getElementById('statSolar').innerText = latest.solar_w.toFixed(0);
+            document.getElementById('statCloud').innerText = latest.cloud_lv14.toFixed(0);
 
             updateChartMode(currentMode);
         }
@@ -230,52 +196,67 @@
         function updateChartMode(mode) {
             currentMode = mode;
             const station = weatherData[currentStation];
-            const config = metricConfig[currentMetric];
-            
+            const cfg = configMap[currentMetric];
+
             document.getElementById('btnHourly').classList.toggle('active-btn', mode === 'hourly');
             document.getElementById('btnDaily').classList.toggle('active-btn', mode === 'daily');
-            document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label} (${mode === 'hourly' ? 'รายชั่วโมง' : '7 วัน'})`;
+            document.getElementById('chartTitle').innerText = `แนวโน้ม${cfg.label} (${mode==='hourly'?'24 ชม.':'7 วัน'})`;
 
-            // ปรับสีและข้อมูลกราฟ
-            weatherChart.data.datasets[0].borderColor = config.color;
-            weatherChart.data.datasets[0].backgroundColor = config.bg;
-            weatherChart.data.datasets[0].pointBackgroundColor = config.color;
+            weatherChart.data.datasets[0].borderColor = cfg.color;
+            weatherChart.data.datasets[0].backgroundColor = cfg.bg;
+            weatherChart.data.datasets[0].pointBackgroundColor = cfg.color;
 
             if (mode === 'hourly') {
+                // แสดงผลครบทุกชั่วโมงที่มีในข้อมูล (ปกติ WRF จะให้มา 24-48 ชม.)
                 weatherChart.data.labels = station.data.map(d => d.datetime.split(' ')[1].substring(0,5));
                 weatherChart.data.datasets[0].data = station.data.map(d => d[currentMetric]);
-                renderSideCards(station.data.slice(-6), 'hourly');
+                
+                // Side Cards: แสดง 6 ช่วงเวลาล่าสุด
+                renderSide(station.data.slice(-8).reverse(), 'hourly');
             } else {
-                const dailyData = getDailyAverages(station.data);
-                weatherChart.data.labels = dailyData.map(d => d.date);
-                weatherChart.data.datasets[0].data = dailyData.map(d => d.avg);
-                renderSideCards(dailyData, 'daily');
+                // คำนวณค่าเฉลี่ยรายวัน
+                const daily = calculateDaily(station.data);
+                weatherChart.data.labels = daily.map(d => d.label);
+                weatherChart.data.datasets[0].data = daily.map(d => d.val);
+                
+                renderSide(daily, 'daily');
             }
             weatherChart.update();
         }
 
-        function renderSideCards(data, mode) {
+        function calculateDaily(data) {
+            const groups = {};
+            data.forEach(d => {
+                const dateStr = d.datetime.split(' ')[0];
+                if (!groups[dateStr]) groups[dateStr] = { sum: 0, count: 0 };
+                groups[dateStr].sum += d[currentMetric];
+                groups[dateStr].count++;
+            });
+
+            // แปลง Object เป็น Array และเรียงลำดับวันที่
+            return Object.keys(groups).sort().map(date => ({
+                label: new Date(date).toLocaleDateString('th-TH', {day:'numeric', month:'short'}),
+                val: (groups[date].sum / groups[date].count).toFixed(1)
+            }));
+        }
+
+        function renderSide(items, mode) {
             const container = document.getElementById('sideContainer');
-            if (mode === 'hourly') {
-                container.innerHTML = data.map(d => `
-                    <div class="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20 text-center">
-                        <p class="text-[10px] mb-1 opacity-60 text-blue-400">${d.datetime.split(' ')[1].substring(0,5)}</p>
-                        <p class="text-xl font-bold text-white">${d[currentMetric].toFixed(1)}</p>
-                    </div>
-                `).join('');
-            } else {
-                container.innerHTML = data.map(d => `
-                    <div class="card-glass p-4 rounded-2xl border border-slate-700/50 text-center">
-                        <p class="text-[10px] mb-1 text-slate-500">${d.date}</p>
-                        <p class="text-xl font-bold text-white">${d.avg}</p>
-                        <p class="text-[8px] text-blue-400">เฉลี่ย</p>
-                    </div>
-                `).join('');
-            }
+            const cfg = configMap[currentMetric];
+            
+            container.innerHTML = items.map(d => `
+                <div class="bg-slate-800/50 p-3 rounded-2xl border border-slate-700/50 text-center transition-all hover:border-blue-500/50">
+                    <p class="text-[9px] mb-1 opacity-50 text-blue-400 uppercase font-bold">
+                        ${mode === 'hourly' ? d.datetime.split(' ')[1].substring(0,5) : d.label}
+                    </p>
+                    <p class="text-lg font-bold text-white">${mode === 'hourly' ? d[currentMetric].toFixed(1) : d.val}<span class="text-[10px] ml-0.5 font-normal opacity-40">${cfg.unit}</span></p>
+                </div>
+            `).join('');
         }
 
         initChart();
         fetchData();
+        setInterval(fetchData, 300000); // อัปเดตข้อมูลทุก 5 นาที
     </script>
 </body>
 </html>
