@@ -11,7 +11,7 @@ def github_push():
     
     try:
         # 2. Add เฉพาะไฟล์ JSON (หรือจะใช้ "." เพื่อเอา index.html ไปด้วยก็ได้)
-        subprocess.run(["git", "add", "village_data.json"], check=True)
+        subprocess.run(["git", "add", "weather_data_locations.json"], check=True)
         
         # 3. Commit พร้อมใส่เวลาที่อัปเดต
         commit_message = f"Auto-update weather data: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
