@@ -135,24 +135,33 @@
     <script>
         lucide.createIcons();
         let weatherChart;
-        let weatherData = {}; // เปลี่ยนเป็น Object เพื่อรองรับโครงสร้างใหม่
+        let weatherData = {};
         let stationNames = [];
         let currentStation = "";
         let currentMode = 'hourly';
+        let currentMetric = 'temp_c'; // ตัวแปรเริ่มต้น
+
+        // ตั้งค่าชื่อภาษาไทยและสีสำหรับแต่ละตัวแปร
+        const metricConfig = {
+            temp_c: { label: 'อุณหภูมิ (°C)', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' },
+            rh: { label: 'ความชื้น (%)', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
+            wind_ms: { label: 'ความเร็วลม (m/s)', color: '#818cf8', bg: 'rgba(129, 140, 248, 0.1)' },
+            solar_w: { label: 'ความเข้มแสง (W/m²)', color: '#fbbf24', bg: 'rgba(251, 191, 36, 0.1)' },
+            cloud_lv14: { label: 'ปริมาณเมฆ (%)', color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.1)' }
+        };
 
         function initChart() {
             const ctx = document.getElementById('weatherChart').getContext('2d');
             weatherChart = new Chart(ctx, {
                 type: 'line',
-                data: { labels: [], datasets: [{
-                    data: [], borderColor: '#3b82f6', borderWidth: 4, tension: 0.4,
-                    pointRadius: 4, pointBackgroundColor: '#3b82f6', fill: true,
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)'
-                }]},
-                options: { responsive: true, maintainAspectRatio: false,
+                data: { labels: [], datasets: [{ data: [], borderWidth: 4, tension: 0.4, fill: true }]},
+                options: { 
+                    responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
-                    scales: { y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
-                            x: { grid: { display: false }, ticks: { color: '#64748b' } } }
+                    scales: { 
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } } 
+                    }
                 }
             });
         }
@@ -161,18 +170,11 @@
             try {
                 const response = await fetch('weather_data_locations.json?t=' + Date.now());
                 weatherData = await response.json();
-                
-                // ดึงรายชื่อสถานีออกมา (เช่น บ้านบึงแดง, บ้านโนนประดู่)
                 stationNames = Object.keys(weatherData);
-                
                 renderDropdown();
-                // ถ้ายังไม่เลือกสถานี ให้เลือกสถานีแรกเป็นค่าเริ่มต้น
                 if (!currentStation) currentStation = stationNames[0];
                 updateUI(currentStation);
-            } catch (e) {
-                console.error("Fetch error", e);
-                document.getElementById('locName').innerText = "ไฟล์ JSON ไม่ถูกต้อง";
-            }
+            } catch (e) { console.error("Fetch error", e); }
         }
 
         function renderDropdown() {
@@ -182,24 +184,45 @@
             `).join('');
         }
 
+        // ฟังก์ชันคำนวณค่าเฉลี่ยรายวันจากข้อมูลรายชั่วโมง
+        function getDailyAverages(dataArray) {
+            const dailyMap = {};
+            dataArray.forEach(item => {
+                const date = item.datetime.split(' ')[0]; // เอาเฉพาะ YYYY-MM-DD
+                if (!dailyMap[date]) dailyMap[date] = { sum: 0, count: 0 };
+                dailyMap[date].sum += item[currentMetric];
+                dailyMap[date].count += 1;
+            });
+
+            return Object.keys(dailyMap).map(date => ({
+                date: new Date(date).toLocaleDateString('th-TH', { day: 'numeric', month: 'short' }),
+                avg: (dailyMap[date].sum / dailyMap[date].count).toFixed(1)
+            }));
+        }
+
+        // ฟังก์ชันสลับตัวแปรที่จะโชว์บนกราฟ (เรียกจาก Card ด้านบน)
+        function setMetric(metric) {
+            currentMetric = metric;
+            updateChartMode(currentMode);
+        }
+
         function updateUI(name) {
             currentStation = name;
             const station = weatherData[name];
-            const latestData = station.data[station.data.length - 1]; // เอาข้อมูลล่าสุด (บรรทัดท้ายสุด)
+            const latest = station.data[station.data.length - 1];
 
             document.getElementById('dropBtn').innerHTML = `${name} <i data-lucide="chevron-down" class="w-4 h-4"></i>`;
             lucide.createIcons();
 
             document.getElementById('locName').innerText = name;
-            document.getElementById('locCoords').innerText = `LAT: ${station.metadata.actual_lat.toFixed(2)}°N | LON: ${station.metadata.actual_lon.toFixed(2)}°E`;
+            document.getElementById('locCoords').innerText = `LAT: ${station.metadata.actual_lat.toFixed(2)} | LON: ${station.metadata.actual_lon.toFixed(2)}`;
             
-            // อัปเดตตัวเลข Stats จากข้อมูลล่าสุด
-            document.getElementById('statTemp').innerText = latestData.temp_c.toFixed(1);
-            document.getElementById('statHumid').innerText = latestData.rh.toFixed(0);
-            document.getElementById('statWind').innerText = latestData.wind_ms.toFixed(1);
-            document.getElementById('statRain').innerText = "0"; // WRF มักจะแยกตัวแปรฝน ถ้ามีใส่เพิ่มได้ครับ
-            document.getElementById('statSolar').innerHTML = `${latestData.solar_w.toFixed(0)}<span class="text-slate-500 text-sm ml-1">W/m²</span>`;
-            document.getElementById('statCloud').innerHTML = `${latestData.cloud_lv14.toFixed(0)}<span class="text-slate-500 text-sm ml-1">%</span>`;
+            // อัปเดตตัวเลขหน้าหลัก
+            document.getElementById('statTemp').innerText = latest.temp_c.toFixed(1);
+            document.getElementById('statHumid').innerText = latest.rh.toFixed(0);
+            document.getElementById('statWind').innerText = latest.wind_ms.toFixed(1);
+            document.getElementById('statSolar').innerHTML = `${latest.solar_w.toFixed(0)} <span class="text-xs opacity-50">W/m²</span>`;
+            document.getElementById('statCloud').innerHTML = `${latest.cloud_lv14.toFixed(0)} <span class="text-xs opacity-50">%</span>`;
 
             updateChartMode(currentMode);
         }
@@ -207,37 +230,48 @@
         function updateChartMode(mode) {
             currentMode = mode;
             const station = weatherData[currentStation];
-            const sideContainer = document.getElementById('sideContainer');
+            const config = metricConfig[currentMetric];
             
             document.getElementById('btnHourly').classList.toggle('active-btn', mode === 'hourly');
             document.getElementById('btnDaily').classList.toggle('active-btn', mode === 'daily');
+            document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label} (${mode === 'hourly' ? 'รายชั่วโมง' : '7 วัน'})`;
+
+            // ปรับสีและข้อมูลกราฟ
+            weatherChart.data.datasets[0].borderColor = config.color;
+            weatherChart.data.datasets[0].backgroundColor = config.bg;
+            weatherChart.data.datasets[0].pointBackgroundColor = config.color;
 
             if (mode === 'hourly') {
-                document.getElementById('chartTitle').innerText = "แนวโน้มอุณหภูมิวันนี้ (°C)";
-                document.getElementById('sideTitle').innerText = "รายละเอียดตามช่วงเวลา";
-                
-                // ดึงข้อมูลรายชั่วโมงจาก JSON ของคุณจริง
-                const labels = station.data.map(d => d.datetime.split(' ')[1].substring(0,5)); // เอาแค่เวลา 00:00
-                const values = station.data.map(d => d.temp_c);
-                
-                weatherChart.data.labels = labels;
-                weatherChart.data.datasets[0].data = values;
-                
-                // แสดง Side Cards เฉพาะ 6 ช่วงเวลาแรกเพื่อให้ไม่ล้นหน้าจอ
-                sideContainer.innerHTML = station.data.slice(0, 6).map(d => `
-                    <div class="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20 text-center">
-                        <p class="text-[10px] mb-1 opacity-60 text-blue-400 uppercase">${d.datetime.split(' ')[1].substring(0,5)} น.</p>
-                        <p class="text-2xl font-bold text-white">${d.temp_c.toFixed(1)}°</p>
-                    </div>
-                `).join('');
-
+                weatherChart.data.labels = station.data.map(d => d.datetime.split(' ')[1].substring(0,5));
+                weatherChart.data.datasets[0].data = station.data.map(d => d[currentMetric]);
+                renderSideCards(station.data.slice(-6), 'hourly');
             } else {
-                // โหมด 7 วัน (เนื่องจากไฟล์คุณเป็นรายชั่วโมง 24 ชม. ผมจะ Mock วันถัดไปให้เห็นภาพ)
-                document.getElementById('chartTitle').innerText = "แนวโน้มอุณหภูมิพยากรณ์ (°C)";
-                document.getElementById('sideTitle').innerText = "พยากรณ์รายวัน";
-                // ... (โค้ด Mock 7 วันเดิม) ...
+                const dailyData = getDailyAverages(station.data);
+                weatherChart.data.labels = dailyData.map(d => d.date);
+                weatherChart.data.datasets[0].data = dailyData.map(d => d.avg);
+                renderSideCards(dailyData, 'daily');
             }
             weatherChart.update();
+        }
+
+        function renderSideCards(data, mode) {
+            const container = document.getElementById('sideContainer');
+            if (mode === 'hourly') {
+                container.innerHTML = data.map(d => `
+                    <div class="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20 text-center">
+                        <p class="text-[10px] mb-1 opacity-60 text-blue-400">${d.datetime.split(' ')[1].substring(0,5)}</p>
+                        <p class="text-xl font-bold text-white">${d[currentMetric].toFixed(1)}</p>
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = data.map(d => `
+                    <div class="card-glass p-4 rounded-2xl border border-slate-700/50 text-center">
+                        <p class="text-[10px] mb-1 text-slate-500">${d.date}</p>
+                        <p class="text-xl font-bold text-white">${d.avg}</p>
+                        <p class="text-[8px] text-blue-400">เฉลี่ย</p>
+                    </div>
+                `).join('');
+            }
         }
 
         initChart();
