@@ -171,9 +171,13 @@
                     <button id="btn-daily" onclick="setRange('daily')" class="btn-range">7วัน</button>
                 </div>
             </div>
-            <div class="chart-scroll-wrapper no-scrollbar">
-				<div class="chart-inner-container">
-					<canvas id="weatherChart"></canvas>
+            <div class="relative h-[300px]">
+				<canvas id="axisChart" class="absolute top-0 left-0 z-10" style="width: 50px; height: 100%; pointer-events: none; background: #0d1526;"></canvas>
+				
+				<div class="chart-scroll-wrapper no-scrollbar h-full pl-[45px]">
+					<div class="chart-inner-container h-full">
+						<canvas id="weatherChart"></canvas>
+					</div>
 				</div>
 			</div>
         </section>
@@ -187,6 +191,7 @@
     <script>
         lucide.createIcons();
         let weatherChart, districtData = [], currentDistrictIdx = 0, currentVillageIdx = 0, currentMetric = "temp_c", currentRange = "hourly";
+        let axisChart;
         
         const metricConfig = {
             temp_c: { label: "อุณหภูมิ", unit: "°C", color: "#fb923c" },
@@ -197,51 +202,67 @@
             solar_w: { label: "แสงแดด", unit: "W/m²", color: "#facc15" }
         };
 
+        const axisCanvas = document.getElementById('axisChart');
+        const axisCtx = axisCanvas.getContext('2d');
         const ctx = document.getElementById('weatherChart').getContext('2d');
+
         weatherChart = new Chart(ctx, {
-			type: 'line',
-			data: { 
-				labels: [], 
-				datasets: [{ 
-					data: [], 
-					fill: true, 
-					tension: 0.45, 
-					borderWidth: 5, 
-					pointRadius: 5, 
-					pointBackgroundColor: '#fff' 
-				}] 
-			},
-			options: { 
-				responsive: true, 
-				maintainAspectRatio: false, 
-				layout: {
-					padding: { left: 5 } // เผื่อพื้นที่ด้านซ้ายเล็กน้อย
-				},
-				scales: { 
-					y: { 
-						position: 'left', // ตรึงไว้ด้านซ้าย
-						afterFit: (axis) => {
-							axis.width = 45; // ล็อคความกว้างให้เท่ากับเส้นแบ่งใน CSS
-						},
-						ticks: { 
-							z: 10, // ทำให้ตัวเลขลอยเด่นอยู่เหนือเส้นกราฟ
-							backdropColor: '#0f172a', // สีพื้นหลังตัวเลข (ใช้สีเดียวกับพื้นหลัง Dashboard)
-							showLabelBackdrop: true, // เปิดการใช้สีพื้นหลังเพื่อทับเส้นกราฟเวลาเลื่อนผ่าน
-							color: '#64748b', 
-							font: { size: 10, weight: 'bold' } 
-						}, 
-						grid: { 
-							color: 'rgba(255,255,255,0.03)',
-							drawTicks: false // ซ่อนติ่งขีดสเกลเพื่อให้ดูเนียน
-						} 
-					}, 
-					x: { 
-						grid: { display: false }, 
-						ticks: { color: '#64748b', font: { size: 10, weight: 'bold' } } 
-					} 
-				} 
-			}
-		});
+            type: 'line',
+            data: { 
+                labels: [], 
+                datasets: [{ 
+                    label: '', // ล้าง label เพื่อไม่ให้ขึ้น undefined
+                    data: [], 
+                    fill: true, 
+                    tension: 0.45, 
+                    borderWidth: 5, 
+                    pointRadius: 5, 
+                    pointBackgroundColor: '#fff' 
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: {
+                    legend: { display: false } // ปิด Legend เพื่อแก้ปัญหา undefined
+                },
+                layout: {
+                    padding: { left: 0 } 
+                },
+                scales: { 
+                    y: { 
+                        display: true, 
+                        grid: { color: 'rgba(255,255,255,0.03)' }, 
+                        ticks: { display: false },
+                        afterFit: (axis) => { axis.width = 45; } // ตรึงความกว้างแกน Y ไว้ที่ 45px
+                    },
+                    x: {
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    }
+                },
+                animation: { 
+                    onComplete: function() { drawFixedAxis(this); } 
+                }
+            }
+        });
+
+        // ฟังก์ชันวาดแกน Y แยกต่างหากเพื่อล็อคตำแหน่ง
+        function drawFixedAxis(chart) {
+            const yAxis = chart.scales.y;
+            axisCanvas.height = chart.height;
+            axisCanvas.width = 50; // กำหนดความกว้างของแกนที่ตรึง
+            
+            axisCtx.clearRect(0, 0, 50, chart.height);
+            axisCtx.font = "bold 11px sans-serif"; // ใช้ฟอนต์ที่คุณตั้งค่าไว้
+            axisCtx.fillStyle = "#64748b";
+            axisCtx.textAlign = "right";
+            
+            yAxis.ticks.forEach((tick) => {
+                const y = yAxis.getPixelForValue(tick.value);
+                // วาดตัวเลขลงบน Canvas แกน Y ที่ตรึงไว้
+                axisCtx.fillText(tick.label, 40, y + 4);
+            });
+        }
 
         async function init() {
             try {
