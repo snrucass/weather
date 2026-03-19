@@ -3,305 +3,386 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>CASS Weather Mobile</title>
+    <title>CASS Weather Pro Intel</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=swap');
-        
-        :root {
-            --bg-deep: #050a15;
-            --card-bg: #111a2d;
-            --neon-blue: #3b82f6;
-            --neon-orange: #fb923c;
-            --neon-green: #4ade80;
-            --neon-yellow: #facc15;
-        }
-
-        body { 
-            font-family: 'Chakra+Petch', sans-serif; 
-            background-color: var(--bg-deep); 
-            color: #ffffff;
-            -webkit-tap-highlight-color: transparent;
-        }
-
-        /* สำหรับจอมือถือกลางแจ้ง - เน้น Contrast */
-        .stat-card {
-            background: var(--card-bg);
-            border: 2px solid #1e293b;
-            border-radius: 20px;
-            transition: all 0.2s ease;
-        }
-
-        .active-card-temp  { border-color: var(--neon-orange); box-shadow: 0 0 15px rgba(251, 146, 60, 0.3); }
-        .active-card-rh2   { border-color: var(--neon-blue); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
-        .active-card-wind  { border-color: var(--neon-green); box-shadow: 0 0 15px rgba(74, 222, 128, 0.3); }
-        .active-card-solar { border-color: var(--neon-yellow); box-shadow: 0 0 15px rgba(250, 204, 21, 0.3); }
-
-        .dropdown-content {
-            display: none;
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(5, 10, 21, 0.95);
-            z-index: 999;
-            padding: 20px;
-            overflow-y: auto;
-        }
-
-        .btn-range {
-            background: #1e293b;
-            color: #94a3b8;
-            padding: 10px 20px;
-            border-radius: 12px;
-            font-weight: 700;
-        }
-
-        .btn-range.active {
-            background: var(--neon-blue);
-            color: white;
-            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
-        }
-
-        /* ตกแต่งกราฟให้เส้นหนาขึ้น มองง่าย */
-        #chartWrapper {
-            position: relative;
-            height: 250px;
-            width: 100%;
-        }
-    </style>
 </head>
-<body class="safe-top pb-10">
+<body class="pb-12 overflow-x-hidden">
 
-    <header class="p-6 flex justify-between items-center bg-[#0a1120] border-b border-slate-800 sticky top-0 z-50">
+    <header class="header-glass sticky top-0 z-50 px-5 py-4 border-b border-slate-800 flex justify-between items-center">
         <div>
-            <h1 class="text-xl font-bold tracking-tighter text-blue-500">CASS <span class="text-white">INTEL</span></h1>
-            <div id="currentTimeDisp" class="text-[10px] font-bold text-emerald-400">SYNCING...</div>
+            <h1 class="text-xl font-black italic tracking-tighter text-blue-500 uppercase">CASS <span class="text-white">INTEL</span></h1>
+            <div id="currentTimeDisp" class="text-[9px] font-mono font-bold text-emerald-400">CONNECTING...</div>
         </div>
-        <button onclick="toggleLocationMenu()" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
-            <i data-lucide="map"></i> เลือกสถานที่
+        <button onclick="toggleLocationMenu()" class="action-btn-blue px-4 py-2 rounded-xl text-[11px] font-bold flex items-center gap-2">
+            <i data-lucide="map-pin" class="w-3.5 h-3.5"></i> เลือกพิกัด
         </button>
     </header>
 
-    <section class="p-6">
-        <h2 id="locName" class="text-4xl font-black mb-1 leading-none tracking-tight">กำลังโหลด...</h2>
-        <p id="locDetail" class="text-slate-500 text-sm font-medium uppercase tracking-tighter italic">--</p>
-        <div id="locCoords" class="text-[10px] font-mono text-blue-400 mt-1 opacity-70">--</div>
-    </section>
+    <main class="max-w-md mx-auto">
+        
+        <section class="p-6 pt-8">
+            <div class="inline-block px-3 py-1 bg-blue-600/10 border border-blue-500/30 rounded-full mb-3">
+                <span id="locDetail" class="text-[10px] font-bold text-blue-400 tracking-widest uppercase">L O A D I N G</span>
+            </div>
+            <h2 id="locName" class="text-5xl font-black mb-1 leading-none tracking-tighter text-white">--</h2>
+            <div id="locCoords" class="text-[9px] font-mono text-slate-500 mt-2 flex gap-3">
+                <span>TARGET: --</span> | <span>MODEL: --</span>
+            </div>
+        </section>
 
-    <section class="px-6 grid grid-cols-2 gap-3 mb-6">
-        <div id="card-temp_c" onclick="setMetric('temp_c', this)" class="stat-card p-4 active-card-temp">
-            <div class="flex items-center gap-2 mb-2 text-orange-400">
-                <i data-lucide="thermometer" class="w-4 h-4"></i> <span class="text-[10px] font-bold">TEMP</span>
+        <section class="px-5 grid grid-cols-2 gap-4 mb-8">
+            <div id="card-temp_c" onclick="setMetric('temp_c', this)" class="stat-card p-5 active-card-temp">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-orange-500/10 rounded-xl text-orange-400"><i data-lucide="thermometer" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-black opacity-40 uppercase">Temp</span>
+                </div>
+                <div class="text-4xl font-bold text-white"><span id="tempVal">--</span><span class="text-xl text-slate-500 ml-1">°</span></div>
             </div>
-            <div class="text-3xl font-bold"><span id="tempVal">--</span><span class="text-lg opacity-40">°C</span></div>
-        </div>
-        <div id="card-rh2" onclick="setMetric('rh2', this)" class="stat-card p-4">
-            <div class="flex items-center gap-2 mb-2 text-blue-400">
-                <i data-lucide="droplets" class="w-4 h-4"></i> <span class="text-[10px] font-bold">HUMID</span>
-            </div>
-            <div class="text-3xl font-bold"><span id="humidVal">--</span><span class="text-lg opacity-40">%</span></div>
-        </div>
-        <div id="card-wind_ms" onclick="setMetric('wind_ms', this)" class="stat-card p-4">
-            <div class="flex items-center gap-2 mb-2 text-green-400">
-                <i data-lucide="wind" class="w-4 h-4"></i> <span class="text-[10px] font-bold">WIND</span>
-            </div>
-            <div class="text-3xl font-bold"><span id="windVal">--</span><span class="text-xs opacity-40 ml-1">m/s</span></div>
-        </div>
-        <div id="card-solar_w" onclick="setMetric('solar_w', this)" class="stat-card p-4">
-            <div class="flex items-center gap-2 mb-2 text-yellow-400">
-                <i data-lucide="sun" class="w-4 h-4"></i> <span class="text-[10px] font-bold">SOLAR</span>
-            </div>
-            <div class="text-3xl font-bold"><span id="solarVal">--</span><span class="text-[10px] opacity-40 ml-1">W/m²</span></div>
-        </div>
-    </section>
 
-    <section class="mx-6 p-5 rounded-[24px] bg-[#0d1526] border border-slate-800">
-        <div class="flex justify-between items-center mb-6">
-            <h3 id="chartTitle" class="text-xs font-bold uppercase tracking-widest text-slate-400">TREND</h3>
-            <div class="flex gap-1">
-                <button id="btn-hourly" onclick="setRange('hourly')" class="btn-range active text-[10px]">24H</button>
-                <button id="btn-daily" onclick="setRange('daily')" class="btn-range text-[10px]">7D</button>
+            <div id="card-rh2" onclick="setMetric('rh2', this)" class="stat-card p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-blue-500/10 rounded-xl text-blue-400"><i data-lucide="droplets" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-black opacity-40 uppercase">Humid</span>
+                </div>
+                <div class="text-4xl font-bold text-white"><span id="humidVal">--</span><span class="text-xl text-slate-500 ml-1">%</span></div>
             </div>
-        </div>
-        <div id="chartWrapper">
-            <canvas id="weatherChart"></canvas>
-        </div>
-    </section>
 
-    <section class="mt-6">
-        <h4 class="px-6 text-[10px] font-bold text-slate-500 uppercase mb-3">Timeline Details</h4>
-        <div id="timeBlocks" class="flex overflow-x-auto gap-3 px-6 pb-4 no-scrollbar">
+            <div id="card-wind_ms" onclick="setMetric('wind_ms', this)" class="stat-card p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-emerald-500/10 rounded-xl text-emerald-400"><i data-lucide="wind" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-black opacity-40 uppercase">Wind</span>
+                </div>
+                <div class="text-4xl font-bold text-white"><span id="windVal">--</span><span class="text-xs text-slate-500 ml-1">m/s</span></div>
             </div>
-    </section>
 
-    <div id="locationMenu" class="dropdown-content">
-        <div class="flex justify-between items-center mb-8">
-            <h2 class="text-2xl font-bold">เลือกอำเภอ / หมู่บ้าน</h2>
-            <button onclick="toggleLocationMenu()" class="p-2 bg-slate-800 rounded-full"><i data-lucide="x"></i></button>
-        </div>
-        <div id="locationOptions" class="space-y-6">
+            <div id="card-rain_mm" onclick="setMetric('rain_mm', this)" class="stat-card p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-cyan-500/10 rounded-xl text-cyan-400"><i data-lucide="cloud-rain" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-black opacity-40 uppercase">Rain</span>
+                </div>
+                <div class="text-4xl font-bold text-white"><span id="rainVal">--</span><span class="text-xs text-slate-500 ml-1">mm</span></div>
             </div>
+
+            <div id="card-cloud_lv14" onclick="setMetric('cloud_lv14', this)" class="stat-card p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-slate-500/10 rounded-xl text-slate-300"><i data-lucide="cloud" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-black opacity-40 uppercase">Cloud</span>
+                </div>
+                <div class="text-4xl font-bold text-white"><span id="cloudVal">--</span><span class="text-xl text-slate-500 ml-1">%</span></div>
+            </div>
+
+            <div id="card-solar_w" onclick="setMetric('solar_w', this)" class="stat-card p-5">
+                <div class="flex justify-between items-start mb-3">
+                    <div class="p-2 bg-yellow-500/10 rounded-xl text-yellow-400"><i data-lucide="sun" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-black opacity-40 uppercase">Solar</span>
+                </div>
+                <div class="text-4xl font-bold text-white"><span id="solarVal">--</span><span class="text-[10px] text-slate-500 ml-1">W/m²</span></div>
+            </div>
+        </section>
+
+        <section class="px-5 mb-8">
+            <div class="chart-container-neon p-6 rounded-[32px] border border-slate-800">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 id="chartTitle" class="text-[10px] font-black uppercase tracking-[0.25em] text-slate-500">TREND ANALYSIS</h3>
+                    <div class="flex gap-1 bg-[#050a15] p-1 rounded-xl border border-slate-800">
+                        <button id="btn-hourly" onclick="setRange('hourly')" class="range-pill active">24H</button>
+                        <button id="btn-daily" onclick="setRange('daily')" class="range-pill">7D</button>
+                    </div>
+                </div>
+                <div style="height: 250px; width: 100%;">
+                    <canvas id="weatherChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <h4 class="px-7 text-[10px] font-black text-slate-600 uppercase tracking-widest mb-4">Timeline Details</h4>
+            <div id="timeBlocks" class="flex overflow-x-auto gap-4 px-6 pb-4 no-scrollbar">
+                </div>
+        </section>
+
+    </main>
+
+    <div id="locationMenu" class="location-modal-overlay">
+        <div class="p-6 h-full flex flex-col">
+            <div class="flex justify-between items-center mb-10">
+                <h2 class="text-3xl font-black tracking-tighter text-white italic uppercase">Select Location</h2>
+                <button onclick="toggleLocationMenu()" class="p-3 bg-red-500/10 text-red-500 rounded-full border border-red-500/20"><i data-lucide="x"></i></button>
+            </div>
+            <div id="locationOptions" class="space-y-10 overflow-y-auto no-scrollbar pb-10">
+                </div>
+        </div>
     </div>
 
-    <script>
-        lucide.createIcons();
-        let weatherChart, districtData = [], currentDistrictIdx = 0, currentVillageIdx = 0, currentMetric = "temp_c", currentRange = "hourly";
-        
-        const metricConfig = {
-            temp_c: { label: "อุณหภูมิ", unit: "°C", color: "#fb923c" },
-            rh2: { label: "ความชื้น", unit: "%", color: "#3b82f6" },
-            wind_ms: { label: "ความเร็วลม", unit: "m/s", color: "#4ade80" },
-            solar_w: { label: "รังสีอาทิตย์", unit: "W/m²", color: "#facc15" }
-        };
+	<style>
+		/* ตั้งค่าธีมหลัก */
+		:root {
+			--bg-deep: #050a15;
+			--card-bg: #0e1525;
+			--neon-blue: #3b82f6;
+			--neon-orange: #fb923c;
+			--neon-green: #22c55e;
+			--neon-cyan: #06b6d4;
+			--neon-yellow: #eab308;
+		}
 
-        // 1. Initialize Chart (เน้นเส้นหนาและจุดใหญ่ขึ้นเพื่อสู้แสง)
-        const ctx = document.getElementById('weatherChart').getContext('2d');
-        weatherChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [], datasets: [{ data: [], fill: true, tension: 0.4, borderWidth: 5, pointRadius: 5, pointBackgroundColor: '#fff' }] },
-            options: { 
-                responsive: true, maintainAspectRatio: false, 
-                plugins: { legend: { display: false } }, 
-                scales: { 
-                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } }, 
-                    x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } } 
-                } 
-            }
-        });
+		body {
+			background-color: var(--bg-deep);
+			user-select: none;
+		}
 
-        async function init() {
-            try {
-                const res = await fetch('weather_data_locations.json?t=' + Date.now());
-                const json = await res.json();
-                districtData = json.districts;
-                
-                // สร้างเมนูเลือกสถานที่
-                const menu = document.getElementById('locationOptions');
-                menu.innerHTML = districtData.map((dist, dIdx) => `
-                    <div class="mb-4">
-                        <h3 class="text-blue-400 font-bold mb-2 border-l-2 border-blue-500 pl-3">${dist.name}</h3>
-                        <div class="grid grid-cols-1 gap-2">
-                            ${dist.villages.map((vil, vIdx) => `
-                                <button onclick="selectVillage(${dIdx}, ${vIdx})" class="w-full text-left bg-slate-800/50 p-4 rounded-xl text-sm font-medium border border-slate-700">
-                                    ${vil.village_name}
-                                </button>
-                            `).join('')}
-                        </div>
-                    </div>
-                `).join('');
+		.header-glass {
+			background: rgba(10, 17, 32, 0.85);
+			backdrop-filter: blur(15px);
+			-webkit-backdrop-filter: blur(15px);
+		}
 
-                selectVillage(0, 0); 
-            } catch (e) { console.error(e); }
-        }
+		/* Stat Cards */
+		.stat-card {
+			background: var(--card-bg);
+			border: 2px solid #1e293b;
+			border-radius: 28px;
+			transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+		}
 
-        function toggleLocationMenu() {
-            const menu = document.getElementById('locationMenu');
-            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
-        }
+		.active-card-temp  { border-color: var(--neon-orange); box-shadow: 0 10px 25px -10px rgba(251, 146, 60, 0.5); }
+		.active-card-rh2   { border-color: var(--neon-blue); box-shadow: 0 10px 25px -10px rgba(59, 130, 246, 0.5); }
+		.active-card-wind  { border-color: var(--neon-green); box-shadow: 0 10px 25px -10px rgba(34, 197, 94, 0.5); }
+		.active-card-rain  { border-color: var(--neon-cyan); box-shadow: 0 10px 25px -10px rgba(6, 182, 212, 0.5); }
+		.active-card-cloud { border-color: #94a3b8; box-shadow: 0 10px 25px -10px rgba(148, 163, 184, 0.5); }
+		.active-card-solar { border-color: var(--neon-yellow); box-shadow: 0 10px 25px -10px rgba(234, 179, 8, 0.5); }
 
-        function selectVillage(dIdx, vIdx) {
-            currentDistrictIdx = dIdx; currentVillageIdx = vIdx;
-            updateDashboard();
-            document.getElementById('locationMenu').style.display = 'none';
-        }
+		/* ปุ่มเลือกช่วงเวลา */
+		.range-pill {
+			padding: 8px 18px;
+			border-radius: 12px;
+			font-size: 10px;
+			font-weight: 800;
+			color: #475569;
+			transition: all 0.3s;
+		}
 
-        function updateDashboard() {
-            if (!districtData.length) return;
-            const village = districtData[currentDistrictIdx].villages[currentVillageIdx];
-            const rawWeather = village.weather_data;
-            const now = new Date();
-            const currentHour = now.getHours();
-            const todayStr = now.toLocaleDateString('en-CA');
+		.range-pill.active {
+			background: var(--neon-blue);
+			color: white;
+			box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+		}
 
-            let currentData = rawWeather.find(d => {
-                const h = (parseInt(d.datetime.split(' ')[1].split(':')[0]) + 7) % 24;
-                return h === currentHour; 
-            }) || rawWeather[rawWeather.length - 1];
+		/* Modal เลือกสถานที่ */
+		.location-modal-overlay {
+			display: none;
+			position: fixed;
+			inset: 0;
+			background: var(--bg-deep);
+			z-index: 1000;
+		}
 
-            document.getElementById('locName').innerText = village.village_name;
-            document.getElementById('locDetail').innerText = `ตำบล${village.subdistrict} อำเภอ${village.district}`;
-            document.getElementById('locCoords').innerText = `LAT: ${village.coordinates.model_lat.toFixed(4)} LON: ${village.coordinates.model_lon.toFixed(4)}`;
-            document.getElementById('currentTimeDisp').innerText = `LOCAL SYNC: ${now.toLocaleTimeString('th-TH')}`;
+		.chart-container-neon {
+			background: radial-gradient(circle at top right, #111a2e, #0e1525);
+		}
 
-            document.getElementById('tempVal').innerText = parseFloat(currentData.temp_c).toFixed(1);
-            document.getElementById('humidVal').innerText = parseFloat(currentData.rh2).toFixed(1);
-            document.getElementById('windVal').innerText = parseFloat(currentData.wind_ms).toFixed(1);
-            
-            const solarVal = (currentHour < 6 || currentHour > 18) ? 0 : parseFloat(currentData.solar_w || 0);
-            document.getElementById('solarVal').innerText = solarVal.toFixed(0);
+		.no-scrollbar::-webkit-scrollbar { display: none; }
+		.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
-            renderChart(rawWeather);
-        }
+		/* Animation */
+		@keyframes pulse-soft {
+			0%, 100% { opacity: 1; }
+			50% { opacity: 0.7; }
+		}
+		.sync-pulse { animation: pulse-soft 2s infinite; }
+	</style>
 
-        function renderChart(weatherArray) {
-            const config = metricConfig[currentMetric];
-            let labels = [], values = [];
+	<script>
+		lucide.createIcons();
 
-            if (currentRange === 'hourly') {
-                labels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
-                values = new Array(24).fill(null);
-                const baseDate = weatherArray[0].datetime.split(' ')[0];
-                weatherArray.forEach(d => {
-                    if (d.datetime.startsWith(baseDate)) {
-                        const localHour = (parseInt(d.datetime.split(' ')[1].split(':')[0]) + 7) % 24;
-                        values[localHour] = d[currentMetric];
-                    }
-                });
-            } else {
-                const dayMap = {};
-                weatherArray.forEach(d => {
-                    let dt = new Date(d.datetime.replace(" ", "T") + "Z");
-                    dt.setHours(dt.getHours() + 7);
-                    const k = dt.toLocaleDateString('en-CA');
-                    if (!dayMap[k]) dayMap[k] = { s: 0, c: 0 };
-                    const v = parseFloat(d[currentMetric]);
-                    if (!isNaN(v)) { dayMap[k].s += v; dayMap[k].c++; }
-                });
-                for (let i = 0; i < 7; i++) {
-                    const d = new Date(); d.setDate(d.getDate() + i);
-                    const k = d.toLocaleDateString('en-CA');
-                    labels.push(d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
-                    values.push(dayMap[k] && dayMap[k].c > 0 ? (dayMap[k].s / dayMap[k].c).toFixed(1) : null);
-                }
-            }
+		// 1. ตัวแปรสถานะ
+		let weatherChart;
+		let districtData = [];
+		let currentDistrictIdx = 0;
+		let currentVillageIdx = 0;
+		let currentMetric = "temp_c";
+		let currentRange = "hourly";
 
-            weatherChart.data.labels = labels;
-            weatherChart.data.datasets[0].data = values;
-            weatherChart.data.datasets[0].borderColor = config.color;
-            weatherChart.data.datasets[0].backgroundColor = config.color + '15';
-            weatherChart.update();
+		// 2. การตั้งค่า Metric
+		const metricConfig = {
+			temp_c: { label: "อุณหภูมิ", unit: "°C", color: "#fb923c" },
+			rh2: { label: "ความชื้น", unit: "%", color: "#3b82f6" },
+			wind_ms: { label: "แรงลม", unit: "m/s", color: "#22c55e" },
+			rain_mm: { label: "น้ำฝน", unit: "mm", color: "#06b6d4" },
+			cloud_lv14: { label: "เมฆ", unit: "%", color: "#94a3b8" },
+			solar_w: { label: "รังสีอาทิตย์", unit: "W/m²", color: "#eab308" }
+		};
 
-            document.getElementById('chartTitle').innerText = `${config.label} TREND`;
-            
-            document.getElementById('timeBlocks').innerHTML = labels.map((l, i) => {
-                if (values[i] === null) return '';
-                return `<div class="min-w-[100px] bg-slate-800/40 p-4 rounded-2xl border border-slate-700/50 text-center">
-                    <div class="text-[9px] text-slate-500 font-bold mb-1 uppercase">${l}</div>
-                    <div class="text-lg font-bold">${values[i]}</div>
-                    <div class="text-[8px] opacity-40">${config.unit}</div>
-                </div>`;
-            }).join('');
-        }
+		// 3. เริ่มต้นกราฟ
+		const ctx = document.getElementById('weatherChart').getContext('2d');
+		weatherChart = new Chart(ctx, {
+			type: 'line',
+			data: { labels: [], datasets: [{ data: [], fill: true, tension: 0.45, borderWidth: 5, pointRadius: 5, pointHoverRadius: 8, pointBackgroundColor: '#fff', pointBorderWidth: 2 }] },
+			options: {
+				responsive: true,
+				maintainAspectRatio: false,
+				plugins: { legend: { display: false } },
+				scales: {
+					y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#475569', font: { size: 10, weight: 'bold' } } },
+					x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 10, weight: 'bold' } } }
+				}
+			}
+		});
 
-        function setMetric(m, el) {
-            currentMetric = m;
-            document.querySelectorAll('.stat-card').forEach(c => {
-                c.className = "stat-card p-4";
-            });
-            el.classList.add('active-card-' + m.split('_')[0]);
-            updateDashboard();
-        }
+		// 4. โหลดข้อมูล JSON
+		async function init() {
+			try {
+				const res = await fetch('weather_data_locations.json?t=' + Date.now());
+				const json = await res.json();
+				districtData = json.districts;
+				
+				// Build Location Selection UI
+				const menu = document.getElementById('locationOptions');
+				menu.innerHTML = districtData.map((dist, dIdx) => `
+					<div>
+						<h3 class="text-blue-500 font-black mb-4 tracking-widest uppercase text-xs border-l-4 border-blue-500 pl-4">${dist.name}</h3>
+						<div class="grid grid-cols-1 gap-3">
+							${dist.villages.map((vil, vIdx) => `
+								<button onclick="selectVillage(${dIdx}, ${vIdx})" class="w-full text-left bg-slate-900/50 p-6 rounded-[24px] border border-slate-800 active:bg-blue-600 active:border-white transition-all">
+									<div class="text-xl font-bold text-white">${vil.village_name}</div>
+									<div class="text-xs text-slate-500 mt-1 uppercase">ต.${vil.subdistrict} จ.สกลนคร</div>
+								</button>`).join('')}
+						</div>
+					</div>`).join('');
 
-        function setRange(r) {
-            currentRange = r;
-            document.getElementById('btn-hourly').classList.toggle('active', r === 'hourly');
-            document.getElementById('btn-daily').classList.toggle('active', r === 'daily');
-            updateDashboard();
-        }
+				selectVillage(0, 0); 
+			} catch (e) { 
+				console.error("JSON Loading Failed", e);
+				document.getElementById('locName').innerText = "Data Error";
+			}
+		}
 
-        init();
-        setInterval(updateDashboard, 60000);
-    </script>
+		// 5. ระบบสลับอำเภอ/หมู่บ้าน
+		function toggleLocationMenu() {
+			const m = document.getElementById('locationMenu');
+			m.style.display = (m.style.display === 'block') ? 'none' : 'block';
+		}
+
+		function selectVillage(dIdx, vIdx) {
+			currentDistrictIdx = dIdx; currentVillageIdx = vIdx;
+			updateDashboard();
+			toggleLocationMenu();
+		}
+
+		// 6. อัปเดตข้อมูลหน้าจอหลัก
+		function updateDashboard() {
+			if (!districtData.length) return;
+			const village = districtData[currentDistrictIdx].villages[currentVillageIdx];
+			const weather = village.weather_data;
+			const now = new Date();
+			const curH = now.getHours();
+
+			// 🕒 จับคู่ข้อมูลตามชั่วโมงปัจจุบัน (JSON + 7)
+			let matchedData = weather.find(d => {
+				let h = (parseInt(d.datetime.split(' ')[1].split(':')[0]) + 7) % 24;
+				return h === curH;
+			}) || weather[weather.length - 1];
+
+			// อัปเดตพาดหัว
+			document.getElementById('locName').innerText = village.village_name;
+			document.getElementById('locDetail').innerText = `ต.${village.subdistrict} อ.${village.district} จ.สกลนคร`;
+			document.getElementById('locCoords').innerHTML = `TARGET: ${village.coordinates.target_lat} | MODEL: ${village.coordinates.model_lat.toFixed(3)}`;
+			document.getElementById('currentTimeDisp').innerText = `LAST SYNC: ${now.toLocaleTimeString('th-TH')}`;
+			document.getElementById('currentTimeDisp').classList.add('sync-pulse');
+
+			// อัปเดต Stat Cards
+			document.getElementById('tempVal').innerText = parseFloat(matchedData.temp_c).toFixed(1);
+			document.getElementById('humidVal').innerText = parseFloat(matchedData.rh2).toFixed(1);
+			document.getElementById('windVal').innerText = parseFloat(matchedData.wind_ms).toFixed(1);
+			document.getElementById('rainVal').innerText = parseFloat(matchedData.rain_mm).toFixed(1);
+			document.getElementById('cloudVal').innerText = parseFloat(matchedData.cloud_lv14).toFixed(0);
+			
+			// Solar Protection: 0 during night
+			const solar = (curH < 6 || curH > 18) ? 0 : parseFloat(matchedData.solar_w || 0);
+			document.getElementById('solarVal').innerText = solar.toFixed(0);
+
+			renderWeatherChart(weather);
+		}
+
+		// 7. ระบบวาดกราฟและบล็อกรายละเอียด
+		function renderWeatherChart(weatherArray) {
+			const conf = metricConfig[currentMetric];
+			let labels = [], values = [];
+
+			if (currentRange === 'hourly') {
+				labels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+				values = new Array(24).fill(null);
+				const baseDate = weatherArray[0].datetime.split(' ')[0];
+				
+				weatherArray.forEach(d => {
+					if (d.datetime.startsWith(baseDate)) {
+						const localH = (parseInt(d.datetime.split(' ')[1].split(':')[0]) + 7) % 24;
+						values[localH] = d[currentMetric];
+					}
+				});
+			} else {
+				// ระบบ 7 วัน (เฉลี่ยรายวัน)
+				const dayMap = {};
+				weatherArray.forEach(d => {
+					let dt = new Date(d.datetime.replace(" ", "T") + "Z");
+					dt.setHours(dt.getHours() + 7);
+					const k = dt.toLocaleDateString('en-CA');
+					if (!dayMap[k]) dayMap[k] = { s: 0, c: 0 };
+					const v = parseFloat(d[currentMetric]);
+					if (!isNaN(v)) { dayMap[k].s += v; dayMap[k].c++; }
+				});
+
+				for (let i = 0; i < 7; i++) {
+					const d = new Date(); d.setDate(d.getDate() + i);
+					const k = d.toLocaleDateString('en-CA');
+					labels.push(d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
+					values.push(dayMap[k] && dayMap[k].c > 0 ? (dayMap[k].s / dayMap[k].c).toFixed(1) : null);
+				}
+			}
+
+			// อัปเดตกราฟ
+			weatherChart.data.labels = labels;
+			weatherChart.data.datasets[0].data = values;
+			weatherChart.data.datasets[0].borderColor = conf.color;
+			weatherChart.data.datasets[0].backgroundColor = conf.color + '20'; // Neon transparency
+			weatherChart.update();
+
+			document.getElementById('chartTitle').innerText = `${conf.label} TREND ANALYSIS`;
+			
+			// อัปเดตบล็อกรายละเอียด
+			document.getElementById('timeBlocks').innerHTML = labels.map((l, i) => {
+				if (values[i] === null) return '';
+				return `
+					<div class="min-w-[120px] bg-slate-900 p-5 rounded-[24px] border border-slate-800 text-center shadow-lg">
+						<div class="text-[10px] text-slate-500 font-black uppercase mb-2">${l}</div>
+						<div class="text-2xl font-bold text-white">${values[i]}</div>
+						<div class="text-[9px] text-blue-500 font-bold mt-1 uppercase">${conf.unit}</div>
+					</div>`;
+			}).join('');
+		}
+
+		// 8. ฟังก์ชันช่วยเลือก Metric
+		function setMetric(m, el) {
+			currentMetric = m;
+			document.querySelectorAll('.stat-card').forEach(c => c.className = "stat-card p-5");
+			const type = m.split('_')[0]; 
+			el.classList.add('active-card-' + type);
+			updateDashboard();
+		}
+
+		function setRange(r) {
+			currentRange = r;
+			document.getElementById('btn-hourly').className = (r === 'hourly') ? "range-pill active" : "range-pill";
+			document.getElementById('btn-daily').className = (r === 'daily') ? "range-pill active" : "range-pill";
+			updateDashboard();
+		}
+
+		// ทำงานเมื่อโหลดเสร็จ
+		init();
+		setInterval(updateDashboard, 60000); // อัปเดตทุกนาที
+	</script>
+
 </body>
 </html>
