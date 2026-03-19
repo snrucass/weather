@@ -241,46 +241,35 @@
                 layout: {
                     padding: { left: 15, top: 45, right: 20, bottom: 10 }
                 },
+                // แก้ไขในส่วน weatherChart options
                 scales: { 
                     y: { 
-                        display: false, // ❌ ปิดแกน Y ทิ้งไปเลย
-                        grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 1 },
-                        ticks: { display: false },
-                        afterFit: (axis) => { axis.width = 50; },// ตรึงความกว้างแกน Y
-						grace: '20%'
+                        display: true, // ต้องเป็น true เพื่อให้เส้นกริดทำงาน
+                        grid: { 
+                            color: 'rgba(255,255,255,0.12)', // เส้นกริดชัดขึ้นตามสั่ง
+                            lineWidth: 1,
+                            drawTicks: false,
+                            drawBorder: false
+                        },
+                        ticks: { 
+                            display: false // ❌ ปิดตัวเลขสเกลด้านซ้ายออก
+                        },
+                        afterFit: (axis) => { 
+                            axis.width = 15; // เว้นพื้นที่ขอบซ้ายนิดเดียวพอ (จากเดิม 50)
+                        },
+                        grace: '20%' // กันตัวเลขบนจุดล้นขอบบน
                     },
                     x: {
-                        // เพิ่มขนาดฟอนต์แกน X เป็น 13 และปรับความหนาเป็น 600
                         ticks: { 
                             color: '#94a3b8', 
-                            font: { 
-                                size: 14,
-                                weight: '700'
-                            },
+                            font: { size: 14, weight: '700' }, // ฟอนต์แกน X ใหญ่และหนา
                             padding: 10
                         },
                         grid: { display: false }
                     }
-                },
+                }
             }
         });
-
-        // ฟังก์ชันวาดแกน Y แยกต่างหากเพื่อล็อคตำแหน่ง (คงเดิม)
-        function drawFixedAxis(chart) {
-            const yAxis = chart.scales.y;
-            axisCanvas.height = chart.height;
-            axisCanvas.width = 50; 
-            
-            axisCtx.clearRect(0, 0, 50, chart.height);
-            axisCtx.font = "bold 12px sans-serif"; 
-            axisCtx.fillStyle = "#94a3b8";
-            axisCtx.textAlign = "right";
-            
-            yAxis.ticks.forEach((tick) => {
-                const y = yAxis.getPixelForValue(tick.value);
-                axisCtx.fillText(tick.label, 40, y + 4);
-            });
-        }
 
         async function init() {
             try {
