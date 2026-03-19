@@ -235,48 +235,62 @@
             renderChart(raw);
         }
 
-        function renderChart(weatherArray) {
-            const processed = weatherArray.map(d => {
-                let dt = new Date(d.datetime.replace(" ", "T") + "Z");
-                dt.setHours(dt.getHours() + 7);
-                return { ...d, localDt: dt };
-            });
-
+        function updateChart(weatherArray) {
             let labels = [];
             let values = [];
 
             if (currentRange === 'hourly') {
+                // 1. สร้างแกน X รอไว้ 24 ชั่วโมง (00:00 - 23:00)
                 labels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
                 values = new Array(24).fill(null);
-                const today = new Date().toISOString().split('T')[0];
-                processed.forEach(d => {
-                    if (d.localDt.toISOString().split('T')[0] === today) {
-                        values[d.localDt.getHours()] = d[currentMetric];
+                
+                // 2. ดึงวันที่ปัจจุบันจากข้อมูลแถวแรก (เพื่อกรองเฉพาะข้อมูลวันนี้)
+                const targetDate = weatherArray[0].datetime.split(' ')[0];
+
+                weatherArray.forEach(d => {
+                    if (d.datetime.startsWith(targetDate)) {
+                        // 3. ดึงชั่วโมงจาก String ตรงๆ (เช่น "01" จาก "2026-03-20 01:00:00")
+                        let rawHour = parseInt(d.datetime.split(' ')[1].split(':')[0]);
+                        
+                        // 4. บวก 7 ชั่วโมง (01:00 + 7 = 08:00)
+                        let localHour = rawHour + 7;
+
+                        // 5. ถ้าบวกแล้วเกิน 23 น. ให้ปัดเศษกลับมาเริ่มที่ 00:00 (ข้ามวัน)
+                        if (localHour >= 24) {
+                            localHour = localHour - 24;
+                        }
+
+                        // 6. วางค่าลงในตำแหน่งชั่วโมงที่คำนวณได้
+                        values[localHour] = d[currentMetric];
                     }
                 });
             } else {
+                // ส่วนของรายวัน (7 วัน) - ใช้ตรรกะเดิมที่คำนวณจาก Date ได้
                 const dayMap = {};
-                processed.forEach(d => {
-                    const dayKey = d.localDt.toISOString().split('T')[0];
+                weatherArray.forEach(d => {
+                    let dt = new Date(d.datetime.replace(" ", "T") + "Z");
+                    dt.setHours(dt.getHours() + 7);
+                    const dayKey = dt.toISOString().split('T')[0];
                     if (!dayMap[dayKey]) dayMap[dayKey] = { s: 0, c: 0 };
-                    dayMap[dayKey].s += d[currentMetric]; 
-                    dayMap[dayKey].c++;
+                    dayMap[dayKey].s += d[currentMetric]; dayMap[dayKey].count++;
                 });
 
                 for (let i = 0; i < 7; i++) {
                     const d = new Date(); d.setDate(d.getDate() + i);
                     const key = d.toISOString().split('T')[0];
                     labels.push(d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
-                    values.push(dayMap[key] ? (dayMap[key].s / dayMap[key].c).toFixed(1) : null);
+                    values.push(dayMap[key] ? (dayMap[key].s / dayMap[key].count).toFixed(1) : null);
                 }
             }
 
+            // อัปเดตกราฟ
             weatherChart.data.labels = labels;
             weatherChart.data.datasets[0].data = values;
             weatherChart.update();
 
             document.getElementById('chartTitle').innerText = `แนวโน้ม${metricLabel[currentMetric]} (${currentRange === 'hourly' ? '24 ชม.' : '7 วัน'})`;
             
+            // อัปเดตบล็อกรายละเอียดด้านขวา
             const container = document.getElementById('timeBlocks');
             container.innerHTML = labels.map((l, i) => {
                 if (values[i] === null && currentRange === 'daily') return '';
