@@ -241,14 +241,15 @@
                     }
                 },
                 layout: {
-                    padding: { left: 0, top: 20 } // เพิ่ม top padding เพื่อไม่ให้ตัวเลขบนจุดโดนขอบตัด
+                    padding: { left: 0, top: 45, right: 30 } // เพิ่ม top padding เพื่อไม่ให้ตัวเลขบนจุดโดนขอบตัด
                 },
                 scales: { 
                     y: { 
                         display: true, 
                         grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 1 },
                         ticks: { display: false },
-                        afterFit: (axis) => { axis.width = 50; } // ตรึงความกว้างแกน Y
+                        afterFit: (axis) => { axis.width = 50; },// ตรึงความกว้างแกน Y
+						grace: '10%'
                     },
                     x: {
                         // เพิ่มขนาดฟอนต์แกน X เป็น 13 และปรับความหนาเป็น 600
