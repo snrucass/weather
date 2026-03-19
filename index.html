@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <style>
 
 		/* รวมเป็นก้อนเดียวเพื่อให้ทำงานครบทุกคำสั่ง */
@@ -208,6 +209,7 @@
 
         weatherChart = new Chart(ctx, {
             type: 'line',
+			plugins: [ChartDataLabels],
             data: { 
                 labels: [], 
                 datasets: [{ 
@@ -224,7 +226,18 @@
                 responsive: true, 
                 maintainAspectRatio: false, 
                 plugins: {
-                    legend: { display: false } // ปิด Legend เพื่อแก้ปัญหา undefined
+                    legend: { display: false }, // ปิด Legend เพื่อแก้ปัญหา undefined
+					datalabels: {
+						display: true,
+						align: 'top',
+						anchor: 'end',
+						color: '#ffffff', // สีขาวสู้แสงแดด
+						offset: 4,
+						font: {
+							size: 11,
+							weight: 'bold'
+						},
+						formatter: (value) => value // หรือ value.toFixed(1) ถ้าอยากได้ทศนิยม
                 },
                 layout: {
                     padding: { left: 0 } 
