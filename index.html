@@ -11,12 +11,11 @@
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&display=swap');
         body { font-family: 'Chakra+Petch', sans-serif; background-color: #0f172a; color: #cbd5e1; }
         .card-glass { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(51, 65, 85, 0.5); backdrop-filter: blur(10px); }
-        .dropdown-content { display: none; position: absolute; background-color: #1e293b; min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5); z-index: 100; border-radius: 12px; border: 1px solid #334155; margin-top: 8px; }
+        .dropdown-content { display: none; position: absolute; background-color: #1e293b; min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5); z-index: 100; border-radius: 12px; border: 1px solid #334155; margin-top: 8px; right: 0; }
         .dropdown:hover .dropdown-content { display: block; }
         .stat-card { border-radius: 24px; padding: 1.5rem; transition: all 0.3s ease; border: 2px solid transparent; }
         .stat-card:hover { transform: translateY(-5px); border-color: #3b82f6; }
-        .day-column { transition: all 0.3s ease; }
-        .day-column:hover { background: rgba(59, 130, 246, 0.1); }
+        .active-btn { background-color: #2563eb !important; color: white !important; }
     </style>
 </head>
 <body class="p-4 md:p-8 min-h-screen">
@@ -31,31 +30,21 @@
 
         <div class="flex flex-wrap gap-3">
             <div class="dropdown relative">
-                <button class="bg-blue-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-2">
-                    อำเภอเมืองสกลนคร <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                <button id="dropBtn" class="bg-blue-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-2">
+                    เลือกสถานที่ <i data-lucide="chevron-down" class="w-4 h-4"></i>
                 </button>
-                <div class="dropdown-content overflow-hidden">
-                    <a href="#" onclick="updateUI(0)" class="block px-4 py-3 hover:bg-blue-600 text-sm">บ้านบึงแดง ม.7</a>
-                    <a href="#" onclick="updateUI(1)" class="block px-4 py-3 hover:bg-blue-600 text-sm border-t border-slate-700">บ้านโนนประดู่ ม.7</a>
-                    <a href="#" onclick="updateUI(2)" class="block px-4 py-3 hover:bg-blue-600 text-sm border-t border-slate-700">บ้านโนนกุง ม.8</a>
-                </div>
+                <div id="locationDropdown" class="dropdown-content overflow-hidden">
+                    </div>
             </div>
-            <button class="card-glass text-slate-300 px-5 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 border border-slate-700 opacity-50 cursor-not-allowed">
-                อำเภอโคกศรีสุพรรณ <i data-lucide="lock" class="w-3 h-3"></i>
-            </button>
-            <button class="card-glass text-slate-300 px-5 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 border border-slate-700 opacity-50 cursor-not-allowed">
-                อำเภอโพนนาแก้ว <i data-lucide="lock" class="w-3 h-3"></i>
-            </button>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto">
         <div class="mb-10 border-l-4 border-blue-500 pl-8 text-white uppercase tracking-tighter italic">
-            <h2 id="locName" class="text-5xl font-bold mb-2">บ้านบึงแดง</h2>
+            <h2 id="locName" class="text-5xl font-bold mb-2">กำลังโหลด...</h2>
             <div class="flex flex-col gap-1 text-slate-400 text-sm tracking-widest not-italic uppercase">
-                <p id="locDetail">ตำบลโคกก่อ · อำเภอเมืองสกลนคร · จังหวัดสกลนคร</p>
-                <p id="locCoords" class="font-mono text-blue-400/80 tracking-normal">LAT: 17.15°N | LON: 104.05°E</p>
-                <p class="mt-2 text-[10px] font-bold">Administered by: <span class="text-white underline decoration-blue-500">CASS</span></p>
+                <p id="locDetail">อำเภอเมืองสกลนคร · จังหวัดสกลนคร</p>
+                <p id="locCoords" class="font-mono text-blue-400/80 tracking-normal">LAT: -- | LON: --</p>
             </div>
         </div>
 
@@ -66,7 +55,7 @@
                     <span class="text-[9px] font-bold opacity-40 uppercase">Temp</span>
                 </div>
                 <div class="flex items-baseline gap-1">
-                    <span id="statTemp" class="text-3xl font-bold text-white">31</span><span class="text-slate-500">°C</span>
+                    <span id="statTemp" class="text-3xl font-bold text-white">--</span><span class="text-slate-500">°C</span>
                 </div>
             </div>
             <div class="card-glass stat-card border-blue-500/30">
@@ -75,7 +64,7 @@
                     <span class="text-[9px] font-bold opacity-40 uppercase">Humid</span>
                 </div>
                 <div class="flex items-baseline gap-1">
-                    <span id="statHumid" class="text-3xl font-bold text-white">85</span><span class="text-slate-500">%</span>
+                    <span id="statHumid" class="text-3xl font-bold text-white">--</span><span class="text-slate-500">%</span>
                 </div>
             </div>
             <div class="card-glass stat-card border-indigo-500/30">
@@ -84,7 +73,7 @@
                     <span class="text-[9px] font-bold opacity-40 uppercase">Wind</span>
                 </div>
                 <div class="flex items-baseline gap-1">
-                    <span id="statWind" class="text-3xl font-bold text-white">10</span><span class="text-slate-500">m/s</span>
+                    <span id="statWind" class="text-3xl font-bold text-white">--</span><span class="text-slate-500">m/s</span>
                 </div>
             </div>
             <div class="card-glass stat-card border-emerald-500/30">
@@ -93,7 +82,7 @@
                     <span class="text-[9px] font-bold opacity-40 uppercase">Rain</span>
                 </div>
                 <div class="flex items-baseline gap-1">
-                    <span id="statRain" class="text-3xl font-bold text-white">0</span><span class="text-slate-500">mm</span>
+                    <span id="statRain" class="text-3xl font-bold text-white">--</span><span class="text-slate-500">mm</span>
                 </div>
             </div>
             <div class="card-glass stat-card border-slate-500/20">
@@ -101,51 +90,35 @@
                     <div class="p-2 bg-slate-500/10 rounded-xl text-slate-300"><i data-lucide="cloud" class="w-5 h-5"></i></div>
                     <span class="text-[9px] font-bold opacity-40 uppercase">Cloud</span>
                 </div>
-                <div class="flex items-baseline gap-1 font-bold text-white">--<span class="text-slate-500 text-sm ml-1">%</span></div>
+                <div id="statCloud" class="flex items-baseline gap-1 font-bold text-white">--<span class="text-slate-500 text-sm ml-1">%</span></div>
             </div>
             <div class="card-glass stat-card border-yellow-500/20">
                 <div class="flex justify-between items-start mb-4">
                     <div class="p-2 bg-yellow-500/10 rounded-xl text-yellow-500"><i data-lucide="sun" class="w-5 h-5"></i></div>
                     <span class="text-[9px] font-bold opacity-40 uppercase">Solar</span>
                 </div>
-                <div class="flex items-baseline gap-1 font-bold text-white">--<span class="text-slate-500 text-sm ml-1">W/m²</span></div>
+                <div id="statSolar" class="flex items-baseline gap-1 font-bold text-white">--<span class="text-slate-500 text-sm ml-1">W/m²</span></div>
             </div>
         </div>
 
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
             <div class="lg:col-span-2 card-glass p-8 rounded-[32px]">
-                <h3 class="font-bold text-lg text-white mb-8 uppercase tracking-widest">แนวโน้มอุณหภูมิ รายชั่วโมง (°C)</h3>
-                <div class="h-[300px] w-full">
-                    <canvas id="weatherChart"></canvas>
+                <div class="flex justify-between items-center mb-8">
+                    <h3 id="chartTitle" class="font-bold text-lg text-white uppercase tracking-widest">แนวโน้มอุณหภูมิ รายชั่วโมง (°C)</h3>
+                    <div class="flex gap-2 bg-slate-800/50 p-1 rounded-xl">
+                        <button id="btnHourly" onclick="updateChartMode('hourly')" class="active-btn text-slate-400 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">รายชั่วโมง</button>
+                        <button id="btnDaily" onclick="updateChartMode('daily')" class="text-slate-400 px-4 py-1.5 rounded-lg text-xs font-bold transition-all">7 วัน</button>
+                    </div>
                 </div>
-                
-                <div class="mt-10 pt-8 border-t border-slate-700/50">
-                    <h3 class="font-bold text-xs text-slate-500 mb-6 uppercase tracking-[0.2em]">พยากรณ์อากาศ 7 วันล่วงหน้า</h3>
-                    <div class="grid grid-cols-7 gap-2" id="forecast7Days">
-                        </div>
+                <div class="h-[350px] w-full">
+                    <canvas id="weatherChart"></canvas>
                 </div>
             </div>
 
-            <div class="card-glass p-8 rounded-[32px] flex flex-col justify-center">
-                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-10 text-center">รายละเอียดตามช่วงเวลา</h4>
-                <div class="grid grid-cols-2 gap-4 text-center">
-                    <div class="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20">
-                        <p class="text-[10px] mb-1 opacity-60 text-blue-400 uppercase">06:00 น.</p>
-                        <p class="text-2xl font-bold text-white" id="time06">31°</p>
+            <div class="card-glass p-8 rounded-[32px]">
+                <h4 id="sideTitle" class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-10 text-center">รายละเอียดตามช่วงเวลา</h4>
+                <div id="sideContainer" class="grid grid-cols-2 gap-4">
                     </div>
-                    <div class="bg-orange-600/10 p-4 rounded-2xl border border-orange-500/20">
-                        <p class="text-[10px] mb-1 opacity-60 text-orange-400 uppercase">09:00 น.</p>
-                        <p class="text-2xl font-bold text-white" id="time09">33°</p>
-                    </div>
-                    <div class="bg-red-600/10 p-4 rounded-2xl border border-red-500/20">
-                        <p class="text-[10px] mb-1 opacity-60 text-red-400 uppercase">12:00 น.</p>
-                        <p class="text-2xl font-bold text-white" id="time12">34°</p>
-                    </div>
-                    <div class="bg-emerald-500/20 p-4 rounded-2xl border border-emerald-500/40 ring-2 ring-emerald-500/40">
-                        <p class="text-[10px] mb-1 font-bold text-emerald-400 uppercase italic">ตอนนี้</p>
-                        <p class="text-2xl font-bold text-white" id="timeNow">32°</p>
-                    </div>
-                </div>
                 <div class="mt-8 text-center bg-slate-800/30 p-4 rounded-2xl">
                     <p class="text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed">
                         Data provided by <br><span class="text-blue-400 font-bold italic">WRF Simulation Model</span>
@@ -161,111 +134,142 @@
 
     <script>
         lucide.createIcons();
+        let weatherChart;
+        let weatherData = [];
+        let currentIdx = 0;
+        let currentMode = 'hourly';
 
-        // ฐานข้อมูลหมู่บ้าน (เพิ่มข้อมูล history7days)
-        const db = [
-            { 
-                name: "บ้านบึงแดง", sub: "ตำบลโคกก่อ", coords: "LAT: 17.15°N | LON: 104.05°E", 
-                temp: 31, humid: 85, wind: 10, rain: 0, 
-                history: [31, 33, 34, 33, 31, 30],
-                history7days: [
-                    { day: 'ศ.', temp: 31, icon: 'sun' }, { day: 'ส.', temp: 32, icon: 'sun' },
-                    { day: 'อา.', temp: 34, icon: 'sun' }, { day: 'จ.', temp: 33, icon: 'cloud-sun' },
-                    { day: 'อ.', temp: 30, icon: 'cloud-rain' }, { day: 'พ.', temp: 29, icon: 'cloud-rain' },
-                    { day: 'พฤ.', temp: 31, icon: 'sun' }
-                ]
-            },
-            { 
-                name: "บ้านโนนประดู่", sub: "ตำบลโนนประดู่", coords: "LAT: 17.12°N | LON: 104.08°E", 
-                temp: 29, humid: 75, wind: 5, rain: 2, 
-                history: [29, 31, 32, 31, 30, 29],
-                history7days: [
-                    { day: 'ศ.', temp: 29, icon: 'cloud-rain' }, { day: 'ส.', temp: 28, icon: 'cloud-rain' },
-                    { day: 'อา.', temp: 30, icon: 'cloud-sun' }, { day: 'จ.', temp: 31, icon: 'sun' },
-                    { day: 'อ.', temp: 32, icon: 'sun' }, { day: 'พ.', temp: 31, icon: 'sun' },
-                    { day: 'พฤ.', temp: 30, icon: 'cloud-sun' }
-                ]
-            },
-            { 
-                name: "บ้านโนนกุง", sub: "ตำบลโนนกุง", coords: "LAT: 17.18°N | LON: 104.02°E", 
-                temp: 33, humid: 60, wind: 12, rain: 0, 
-                history: [32, 34, 35, 34, 33, 32],
-                history7days: [
-                    { day: 'ศ.', temp: 33, icon: 'sun' }, { day: 'ส.', temp: 35, icon: 'sun' },
-                    { day: 'อา.', temp: 36, icon: 'sun' }, { day: 'จ.', temp: 34, icon: 'sun' },
-                    { day: 'อ.', temp: 33, icon: 'cloud-sun' }, { day: 'พ.', temp: 32, icon: 'cloud-sun' },
-                    { day: 'พฤ.', temp: 33, icon: 'sun' }
-                ]
-            }
-        ];
-
-        // Setup Chart
-        const ctx = document.getElementById('weatherChart').getContext('2d');
-        let weatherChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
-                datasets: [{
-                    data: db[0].history,
-                    borderColor: '#3b82f6',
-                    borderWidth: 4,
-                    tension: 0.4,
-                    pointRadius: 6,
-                    pointBackgroundColor: '#fff',
-                    fill: false
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: { legend: { display: false } },
-                scales: {
-                    y: { min: 20, max: 40, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 5, color: '#64748b' } },
-                    x: { grid: { display: false }, ticks: { color: '#64748b' } }
+        // 1. Initialize Chart
+        function initChart() {
+            const ctx = document.getElementById('weatherChart').getContext('2d');
+            weatherChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        data: [],
+                        borderColor: '#3b82f6',
+                        borderWidth: 4,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: '#3b82f6',
+                        fill: true,
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                    }
                 }
-            }
-        });
-
-        // ฟังก์ชันสร้าง UI พยากรณ์ 7 วัน
-        function render7Days(idx) {
-            const container = document.getElementById('forecast7Days');
-            container.innerHTML = '';
-            db[idx].history7days.forEach(item => {
-                const col = document.createElement('div');
-                col.className = 'day-column text-center p-3 rounded-2xl border border-slate-800/50';
-                col.innerHTML = `
-                    <p class="text-[10px] text-slate-500 font-bold mb-3">${item.day}</p>
-                    <i data-lucide="${item.icon}" class="w-5 h-5 mx-auto mb-3 ${item.icon === 'sun' ? 'text-orange-400' : 'text-blue-400'}"></i>
-                    <p class="text-sm font-bold text-white">${item.temp}°</p>
-                `;
-                container.appendChild(col);
             });
-            lucide.createIcons();
         }
 
-        // ฟังก์ชันอัปเดตหน้าจอทั้งหมด
+        // 2. Fetch Data
+        async function fetchData() {
+            try {
+                const response = await fetch('weather_data_locations.json?t=' + Date.now());
+                weatherData = await response.json();
+                renderDropdown();
+                updateUI(0);
+            } catch (e) {
+                console.error("Fetch error", e);
+            }
+        }
+
+        function renderDropdown() {
+            const container = document.getElementById('locationDropdown');
+            container.innerHTML = weatherData.map((loc, i) => `
+                <a href="#" onclick="updateUI(${i})" class="block px-4 py-3 hover:bg-blue-600 text-sm border-t border-slate-700 first:border-0">${loc.Station_Name}</a>
+            `).join('');
+        }
+
+        // 3. Update UI
         function updateUI(idx) {
-            const data = db[idx];
-            document.getElementById('locName').innerText = data.name;
-            document.getElementById('locDetail').innerText = `${data.sub} · อำเภอเมืองสกลนคร · จังหวัดสกลนคร`;
-            document.getElementById('locCoords').innerText = data.coords;
-            document.getElementById('statTemp').innerText = data.temp;
-            document.getElementById('statHumid').innerText = data.humid;
-            document.getElementById('statWind').innerText = data.wind;
-            document.getElementById('statRain').innerText = data.rain;
-            
-            document.getElementById('time06').innerText = data.history[0] + "°";
-            document.getElementById('time09').innerText = data.history[1] + "°";
-            document.getElementById('time12').innerText = data.history[2] + "°";
-            document.getElementById('timeNow').innerText = data.temp + "°";
+            currentIdx = idx;
+            const data = weatherData[idx];
+            document.getElementById('dropBtn').innerHTML = `${data.Station_Name} <i data-lucide="chevron-down" class="w-4 h-4"></i>`;
+            lucide.createIcons();
 
-            weatherChart.data.datasets[0].data = data.history;
-            weatherChart.update();
-            render7Days(idx); // อัปเดตตาราง 7 วันด้วย
+            document.getElementById('locName').innerText = data.Station_Name;
+            document.getElementById('locCoords').innerText = `LAT: ${data.Lat}°N | LON: ${data.Lon}°E`;
+            document.getElementById('statTemp').innerText = data.Temp;
+            document.getElementById('statHumid').innerText = data.Humidity;
+            document.getElementById('statWind').innerText = data.WindSpeed || 0;
+            document.getElementById('statRain').innerText = data.Rain || 0;
+
+            updateChartMode(currentMode);
         }
 
-        // เริ่มต้นแสดงผลครั้งแรก
-        render7Days(0);
+        // 4. Chart & Side Content Control
+        function updateChartMode(mode) {
+            currentMode = mode;
+            const data = weatherData[currentIdx];
+            const sideContainer = document.getElementById('sideContainer');
+            
+            // Toggle Buttons UI
+            document.getElementById('btnHourly').classList.toggle('active-btn', mode === 'hourly');
+            document.getElementById('btnDaily').classList.toggle('active-btn', mode === 'daily');
+
+            if (mode === 'hourly') {
+                document.getElementById('chartTitle').innerText = "แนวโน้มอุณหภูมิ รายชั่วโมง (°C)";
+                document.getElementById('sideTitle').innerText = "รายละเอียดตามช่วงเวลา";
+                
+                // Mock Hourly (ถ้าใน JSON ไม่มี ให้ใช้ Mock ไปก่อน)
+                const labels = ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'];
+                const values = [data.Temp-2, data.Temp, data.Temp+3, data.Temp+2, data.Temp-1, data.Temp-3];
+                
+                weatherChart.data.labels = labels;
+                weatherChart.data.datasets[0].data = values;
+                
+                // Side Cards
+                sideContainer.innerHTML = labels.map((time, i) => `
+                    <div class="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20 text-center">
+                        <p class="text-[10px] mb-1 opacity-60 text-blue-400 uppercase">${time} น.</p>
+                        <p class="text-2xl font-bold text-white">${values[i]}°</p>
+                    </div>
+                `).join('');
+
+            } else {
+                document.getElementById('chartTitle').innerText = "แนวโน้มอุณหภูมิ 7 วัน (°C)";
+                document.getElementById('sideTitle').innerText = "พยากรณ์รายวัน";
+
+                const labels = [];
+                const values = [];
+                const daysTH = ['อา.', 'จ.', 'อ.', 'พ.', 'พฤ.', 'ศ.', 'ส.'];
+                const sideHTML = [];
+
+                for(let i=0; i<7; i++) {
+                    const d = new Date();
+                    d.setDate(d.getDate() + i);
+                    const label = d.getDate() + ' ' + d.toLocaleDateString('th-TH', {month:'short'});
+                    labels.push(label);
+                    
+                    const t = Math.floor(data.Temp + (Math.random() * 4 - 2));
+                    values.push(t);
+
+                    sideHTML.push(`
+                        <div class="card-glass p-3 rounded-2xl text-center border border-slate-700/50">
+                            <p class="text-[10px] text-slate-500 uppercase mb-1">${i===0?'วันนี้':daysTH[d.getDay()]}</p>
+                            <p class="text-xl font-bold text-white">${t}°</p>
+                        </div>
+                    `);
+                }
+                
+                weatherChart.data.labels = labels;
+                weatherChart.data.datasets[0].data = values;
+                sideContainer.innerHTML = sideHTML.join('');
+            }
+            weatherChart.update();
+        }
+
+        initChart();
+        fetchData();
+        setInterval(fetchData, 300000); // อัปเดตทุก 5 นาที
     </script>
 </body>
 </html>
