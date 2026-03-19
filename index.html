@@ -291,7 +291,7 @@
             weatherChart.data.datasets[0].backgroundColor = config.color + '15';
             weatherChart.update();
 
-            document.getElementById('chartTitle').innerText = `${config.label} TREND`;
+            document.getElementById('chartTitle').innerText = `พยากรณ์${config.label}`;
             document.getElementById('timeBlocks').innerHTML = labels.map((l, i) => {
                 if (values[i] === null) return '';
                 return `<div class="min-w-[110px] bg-[#111a2d] p-5 rounded-2xl border border-slate-800 text-center">
