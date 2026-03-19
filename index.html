@@ -2,102 +2,172 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CASS | Weather Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>CASS Weather Mobile</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&display=swap');
-        body { font-family: 'Chakra+Petch', sans-serif; background-color: #0f172a; color: #cbd5e1; }
-        .card-glass { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(51, 65, 85, 0.5); backdrop-filter: blur(10px); }
-        .dropdown-content { display: none; position: absolute; background-color: #1e293b; min-width: 220px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5); z-index: 100; border-radius: 12px; border: 1px solid #334155; margin-top: 8px; overflow: hidden; }
-        .stat-card { border-radius: 24px; padding: 1.5rem; transition: all 0.3s ease; border: 2px solid transparent; cursor: pointer; }
-        .stat-card:hover { transform: translateY(-5px); border-color: #3b82f6; }
-        .active-card { border-color: #3b82f6 !important; background: rgba(59, 130, 246, 0.1) !important; }
-        .active-btn { background-color: #2563eb !important; color: white !important; }
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=swap');
+        
+        :root {
+            --bg-deep: #050a15;
+            --card-bg: #111a2d;
+            --neon-blue: #3b82f6;
+            --neon-orange: #fb923c;
+            --neon-green: #4ade80;
+            --neon-yellow: #facc15;
+        }
+
+        body { 
+            font-family: 'Chakra+Petch', sans-serif; 
+            background-color: var(--bg-deep); 
+            color: #ffffff;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* สำหรับจอมือถือกลางแจ้ง - เน้น Contrast */
+        .stat-card {
+            background: var(--card-bg);
+            border: 2px solid #1e293b;
+            border-radius: 20px;
+            transition: all 0.2s ease;
+        }
+
+        .active-card-temp  { border-color: var(--neon-orange); box-shadow: 0 0 15px rgba(251, 146, 60, 0.3); }
+        .active-card-rh2   { border-color: var(--neon-blue); box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        .active-card-wind  { border-color: var(--neon-green); box-shadow: 0 0 15px rgba(74, 222, 128, 0.3); }
+        .active-card-solar { border-color: var(--neon-yellow); box-shadow: 0 0 15px rgba(250, 204, 21, 0.3); }
+
+        .dropdown-content {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(5, 10, 21, 0.95);
+            z-index: 999;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .btn-range {
+            background: #1e293b;
+            color: #94a3b8;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-weight: 700;
+        }
+
+        .btn-range.active {
+            background: var(--neon-blue);
+            color: white;
+            box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+        }
+
+        /* ตกแต่งกราฟให้เส้นหนาขึ้น มองง่าย */
+        #chartWrapper {
+            position: relative;
+            height: 250px;
+            width: 100%;
+        }
     </style>
 </head>
-<body class="p-4 md:p-8 min-h-screen">
+<body class="safe-top pb-10">
 
-    <nav class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
-        <div class="flex items-center gap-3">
-            <div class="p-3 bg-blue-600 rounded-2xl shadow-lg">
-                <i data-lucide="layout-dashboard" class="text-white w-6 h-6"></i>
-            </div>
-            <h1 class="text-2xl font-bold tracking-tight text-white uppercase">CASS <span class="text-blue-400">VILLAGE</span></h1>
+    <header class="p-6 flex justify-between items-center bg-[#0a1120] border-b border-slate-800 sticky top-0 z-50">
+        <div>
+            <h1 class="text-xl font-bold tracking-tighter text-blue-500">CASS <span class="text-white">INTEL</span></h1>
+            <div id="currentTimeDisp" class="text-[10px] font-bold text-emerald-400">SYNCING...</div>
         </div>
-        <div class="flex flex-wrap gap-3" id="districtControls">
-            <div class="relative"><button onclick="toggleDropdown(0)" id="btn-dist-0" class="bg-blue-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold">เมืองสกลนคร</button><div id="dropdown-0" class="dropdown-content"></div></div>
-            <div class="relative"><button onclick="toggleDropdown(1)" id="btn-dist-1" class="card-glass text-slate-300 px-5 py-2.5 rounded-full text-sm font-semibold">โคกศรีสุพรรณ</button><div id="dropdown-1" class="dropdown-content"></div></div>
-            <div class="relative"><button onclick="toggleDropdown(2)" id="btn-dist-2" class="card-glass text-slate-300 px-5 py-2.5 rounded-full text-sm font-semibold">โพนนาแก้ว</button><div id="dropdown-2" class="dropdown-content"></div></div>
-        </div>
-    </nav>
+        <button onclick="toggleLocationMenu()" class="bg-blue-600 px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2">
+            <i data-lucide="map"></i> เลือกสถานที่
+        </button>
+    </header>
 
-    <main class="max-w-7xl mx-auto">
-        <div class="mb-10 border-l-4 border-blue-500 pl-8 text-white">
-            <h2 id="locName" class="text-5xl font-black mb-2 italic">กำลังโหลด...</h2>
-            <div id="locDetail" class="text-slate-400 text-sm tracking-widest uppercase">--</div>
-            <div id="locCoords" class="font-mono text-blue-400/80 text-xs mt-1">--</div>
-            <div id="currentTimeDisp" class="text-[10px] font-bold text-emerald-400 mt-2">UTC+7 SYNC</div>
-        </div>
+    <section class="p-6">
+        <h2 id="locName" class="text-4xl font-black mb-1 leading-none tracking-tight">กำลังโหลด...</h2>
+        <p id="locDetail" class="text-slate-500 text-sm font-medium uppercase tracking-tighter italic">--</p>
+        <div id="locCoords" class="text-[10px] font-mono text-blue-400 mt-1 opacity-70">--</div>
+    </section>
 
-        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
-            <div id="card-temp_c" onclick="setMetric('temp_c', this)" class="card-glass stat-card active-card">
-                <div class="flex justify-between items-start mb-4"><div class="p-2 bg-orange-500/10 rounded-xl text-orange-500"><i data-lucide="thermometer"></i></div><span class="text-[9px] font-bold opacity-40">TEMP</span></div>
-                <div class="flex items-baseline gap-1"><span id="tempVal" class="text-3xl font-bold text-white">--</span><span class="text-slate-500 text-xs">°C</span></div>
+    <section class="px-6 grid grid-cols-2 gap-3 mb-6">
+        <div id="card-temp_c" onclick="setMetric('temp_c', this)" class="stat-card p-4 active-card-temp">
+            <div class="flex items-center gap-2 mb-2 text-orange-400">
+                <i data-lucide="thermometer" class="w-4 h-4"></i> <span class="text-[10px] font-bold">TEMP</span>
             </div>
-            <div id="card-rh2" onclick="setMetric('rh2', this)" class="card-glass stat-card">
-                <div class="flex justify-between items-start mb-4"><div class="p-2 bg-blue-500/10 rounded-xl text-blue-500"><i data-lucide="droplets"></i></div><span class="text-[9px] font-bold opacity-40">HUMID</span></div>
-                <div class="flex items-baseline gap-1"><span id="humidVal" class="text-3xl font-bold text-white">--</span><span class="text-slate-500 text-xs">%</span></div>
-            </div>
-            <div id="card-wind_ms" onclick="setMetric('wind_ms', this)" class="card-glass stat-card">
-                <div class="flex justify-between items-start mb-4"><div class="p-2 bg-indigo-500/10 rounded-xl text-indigo-500"><i data-lucide="wind"></i></div><span class="text-[9px] font-bold opacity-40">WIND</span></div>
-                <div class="flex items-baseline gap-1"><span id="windVal" class="text-3xl font-bold text-white">--</span><span class="text-slate-500 text-xs">m/s</span></div>
-            </div>
-            <div id="card-rain_mm" onclick="setMetric('rain_mm', this)" class="card-glass stat-card">
-                <div class="flex justify-between items-start mb-4"><div class="p-2 bg-emerald-500/10 rounded-xl text-emerald-500"><i data-lucide="cloud-rain"></i></div><span class="text-[9px] font-bold opacity-40">RAIN</span></div>
-                <div class="flex items-baseline gap-1"><span id="rainVal" class="text-3xl font-bold text-white">--</span><span class="text-slate-500 text-xs">mm</span></div>
-            </div>
-            <div id="card-cloud_lv14" onclick="setMetric('cloud_lv14', this)" class="card-glass stat-card">
-                <div class="flex justify-between items-start mb-4"><div class="p-2 bg-slate-500/10 rounded-xl text-slate-300"><i data-lucide="cloud"></i></div><span class="text-[9px] font-bold opacity-40">CLOUD</span></div>
-                <div class="flex items-baseline gap-1"><span id="cloudVal" class="text-3xl font-bold text-white">--</span><span class="text-slate-500 text-xs">%</span></div>
-            </div>
-            <div id="card-solar_w" onclick="setMetric('solar_w', this)" class="card-glass stat-card">
-                <div class="flex justify-between items-start mb-4"><div class="p-2 bg-yellow-500/10 rounded-xl text-yellow-500"><i data-lucide="sun"></i></div><span class="text-[9px] font-bold opacity-40">SOLAR</span></div>
-                <div class="flex items-baseline gap-1"><span id="solarVal" class="text-3xl font-bold text-white">--</span><span class="text-slate-500 text-[10px]">W/m²</span></div>
-            </div>
+            <div class="text-3xl font-bold"><span id="tempVal">--</span><span class="text-lg opacity-40">°C</span></div>
         </div>
+        <div id="card-rh2" onclick="setMetric('rh2', this)" class="stat-card p-4">
+            <div class="flex items-center gap-2 mb-2 text-blue-400">
+                <i data-lucide="droplets" class="w-4 h-4"></i> <span class="text-[10px] font-bold">HUMID</span>
+            </div>
+            <div class="text-3xl font-bold"><span id="humidVal">--</span><span class="text-lg opacity-40">%</span></div>
+        </div>
+        <div id="card-wind_ms" onclick="setMetric('wind_ms', this)" class="stat-card p-4">
+            <div class="flex items-center gap-2 mb-2 text-green-400">
+                <i data-lucide="wind" class="w-4 h-4"></i> <span class="text-[10px] font-bold">WIND</span>
+            </div>
+            <div class="text-3xl font-bold"><span id="windVal">--</span><span class="text-xs opacity-40 ml-1">m/s</span></div>
+        </div>
+        <div id="card-solar_w" onclick="setMetric('solar_w', this)" class="stat-card p-4">
+            <div class="flex items-center gap-2 mb-2 text-yellow-400">
+                <i data-lucide="sun" class="w-4 h-4"></i> <span class="text-[10px] font-bold">SOLAR</span>
+            </div>
+            <div class="text-3xl font-bold"><span id="solarVal">--</span><span class="text-[10px] opacity-40 ml-1">W/m²</span></div>
+        </div>
+    </section>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-            <div class="lg:col-span-2 card-glass p-8 rounded-[32px]">
-                <div class="flex justify-between items-center mb-8">
-                    <h3 id="chartTitle" class="font-bold text-lg text-white uppercase tracking-widest">แนวโน้มสภาพอากาศ</h3>
-                    <div class="flex gap-2 bg-slate-800/50 p-1 rounded-xl">
-                        <button id="btn-hourly" onclick="setRange('hourly')" class="active-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase">24 HR</button>
-                        <button id="btn-daily" onclick="setRange('daily')" class="text-slate-400 px-4 py-1.5 rounded-lg text-xs font-bold transition-all uppercase">7 DAYS</button>
-                    </div>
-                </div>
-                <div class="h-[350px] w-full"><canvas id="weatherChart"></canvas></div>
-            </div>
-            <div class="card-glass p-8 rounded-[32px]">
-                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-10 text-center">รายละเอียด</h4>
-                <div id="timeBlocks" class="grid grid-cols-2 gap-4"></div>
+    <section class="mx-6 p-5 rounded-[24px] bg-[#0d1526] border border-slate-800">
+        <div class="flex justify-between items-center mb-6">
+            <h3 id="chartTitle" class="text-xs font-bold uppercase tracking-widest text-slate-400">TREND</h3>
+            <div class="flex gap-1">
+                <button id="btn-hourly" onclick="setRange('hourly')" class="btn-range active text-[10px]">24H</button>
+                <button id="btn-daily" onclick="setRange('daily')" class="btn-range text-[10px]">7D</button>
             </div>
         </div>
-    </main>
+        <div id="chartWrapper">
+            <canvas id="weatherChart"></canvas>
+        </div>
+    </section>
+
+    <section class="mt-6">
+        <h4 class="px-6 text-[10px] font-bold text-slate-500 uppercase mb-3">Timeline Details</h4>
+        <div id="timeBlocks" class="flex overflow-x-auto gap-3 px-6 pb-4 no-scrollbar">
+            </div>
+    </section>
+
+    <div id="locationMenu" class="dropdown-content">
+        <div class="flex justify-between items-center mb-8">
+            <h2 class="text-2xl font-bold">เลือกอำเภอ / หมู่บ้าน</h2>
+            <button onclick="toggleLocationMenu()" class="p-2 bg-slate-800 rounded-full"><i data-lucide="x"></i></button>
+        </div>
+        <div id="locationOptions" class="space-y-6">
+            </div>
+    </div>
 
     <script>
         lucide.createIcons();
         let weatherChart, districtData = [], currentDistrictIdx = 0, currentVillageIdx = 0, currentMetric = "temp_c", currentRange = "hourly";
-        const metricUnit = { temp_c: "°C", rh2: "%", wind_ms: "m/s", rain_mm: "mm", cloud_lv14: "%", solar_w: "W/m²" };
-        const metricLabel = { temp_c: "อุณหภูมิ", rh2: "ความชื้น", wind_ms: "แรงลม", rain_mm: "ฝน", cloud_lv14: "เมฆ", solar_w: "แสงแดด" };
+        
+        const metricConfig = {
+            temp_c: { label: "อุณหภูมิ", unit: "°C", color: "#fb923c" },
+            rh2: { label: "ความชื้น", unit: "%", color: "#3b82f6" },
+            wind_ms: { label: "ความเร็วลม", unit: "m/s", color: "#4ade80" },
+            solar_w: { label: "รังสีอาทิตย์", unit: "W/m²", color: "#facc15" }
+        };
 
+        // 1. Initialize Chart (เน้นเส้นหนาและจุดใหญ่ขึ้นเพื่อสู้แสง)
         const ctx = document.getElementById('weatherChart').getContext('2d');
         weatherChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, borderWidth: 4, pointRadius: 4, spanGaps: true }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#334155' }, ticks: { color: '#64748b' } }, x: { grid: { display: false }, ticks: { color: '#64748b' } } } }
+            data: { labels: [], datasets: [{ data: [], fill: true, tension: 0.4, borderWidth: 5, pointRadius: 5, pointBackgroundColor: '#fff' }] },
+            options: { 
+                responsive: true, maintainAspectRatio: false, 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } }, 
+                    x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 } } } 
+                } 
+            }
         });
 
         async function init() {
@@ -105,33 +175,35 @@
                 const res = await fetch('weather_data_locations.json?t=' + Date.now());
                 const json = await res.json();
                 districtData = json.districts;
-                districtData.forEach((dist, dIdx) => {
-                    const dropdown = document.getElementById(`dropdown-${dIdx}`);
-                    if (dropdown) {
-                        dropdown.innerHTML = dist.villages.map((vil, vIdx) => `
-                            <button onclick="selectVillage(${dIdx}, ${vIdx})" class="block w-full text-left px-4 py-3 hover:bg-blue-600 text-sm text-slate-300 rounded-lg border-b border-slate-700/50 last:border-0">${vil.village_name}</button>
-                        `).join('');
-                    }
-                });
+                
+                // สร้างเมนูเลือกสถานที่
+                const menu = document.getElementById('locationOptions');
+                menu.innerHTML = districtData.map((dist, dIdx) => `
+                    <div class="mb-4">
+                        <h3 class="text-blue-400 font-bold mb-2 border-l-2 border-blue-500 pl-3">${dist.name}</h3>
+                        <div class="grid grid-cols-1 gap-2">
+                            ${dist.villages.map((vil, vIdx) => `
+                                <button onclick="selectVillage(${dIdx}, ${vIdx})" class="w-full text-left bg-slate-800/50 p-4 rounded-xl text-sm font-medium border border-slate-700">
+                                    ${vil.village_name}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                `).join('');
+
                 selectVillage(0, 0); 
             } catch (e) { console.error(e); }
         }
 
-        function toggleDropdown(idx) {
-            const el = document.getElementById(`dropdown-${idx}`);
-            const isVisible = el.style.display === 'block';
-            document.querySelectorAll(".dropdown-content").forEach(d => d.style.display = 'none');
-            el.style.display = isVisible ? 'none' : 'block';
+        function toggleLocationMenu() {
+            const menu = document.getElementById('locationMenu');
+            menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
         }
 
         function selectVillage(dIdx, vIdx) {
             currentDistrictIdx = dIdx; currentVillageIdx = vIdx;
-            [0, 1, 2].forEach(i => {
-                const btn = document.getElementById(`btn-dist-${i}`);
-                if (btn) btn.className = (i === dIdx) ? "bg-blue-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold" : "card-glass text-slate-300 px-5 py-2.5 rounded-full text-sm font-semibold border border-slate-700";
-            });
             updateDashboard();
-            document.querySelectorAll(".dropdown-content").forEach(el => el.style.display = 'none');
+            document.getElementById('locationMenu').style.display = 'none';
         }
 
         function updateDashboard() {
@@ -142,25 +214,20 @@
             const currentHour = now.getHours();
             const todayStr = now.toLocaleDateString('en-CA');
 
-            // 🕒 ค้นหาข้อมูลชั่วโมงปัจจุบัน (บวก 7 แมนนวล)
             let currentData = rawWeather.find(d => {
                 const h = (parseInt(d.datetime.split(' ')[1].split(':')[0]) + 7) % 24;
-                const dPart = d.datetime.split(' ')[0];
                 return h === currentHour; 
             }) || rawWeather[rawWeather.length - 1];
 
             document.getElementById('locName').innerText = village.village_name;
-            document.getElementById('locDetail').innerText = `ต.${village.subdistrict} อ.${village.district} จ.สกลนคร`;
-            document.getElementById('locCoords').innerText = `TARGET LAT: ${village.coordinates.target_lat} | MODEL LAT: ${village.coordinates.model_lat.toFixed(4)}`;
+            document.getElementById('locDetail').innerText = `ตำบล${village.subdistrict} อำเภอ${village.district}`;
+            document.getElementById('locCoords').innerText = `LAT: ${village.coordinates.model_lat.toFixed(4)} LON: ${village.coordinates.model_lon.toFixed(4)}`;
+            document.getElementById('currentTimeDisp').innerText = `LOCAL SYNC: ${now.toLocaleTimeString('th-TH')}`;
+
+            document.getElementById('tempVal').innerText = parseFloat(currentData.temp_c).toFixed(1);
+            document.getElementById('humidVal').innerText = parseFloat(currentData.rh2).toFixed(1);
+            document.getElementById('windVal').innerText = parseFloat(currentData.wind_ms).toFixed(1);
             
-            const safe = (val) => (val !== undefined && val !== null) ? parseFloat(val).toFixed(1) : "0.0";
-            document.getElementById('tempVal').innerText = safe(currentData.temp_c);
-            document.getElementById('humidVal').innerText = safe(currentData.rh2);
-            document.getElementById('windVal').innerText = safe(currentData.wind_ms);
-            document.getElementById('rainVal').innerText = safe(currentData.rain_mm);
-            document.getElementById('cloudVal').innerText = safe(currentData.cloud_lv14);
-            
-            // Solar Fix: กลางคืนต้อง 0
             const solarVal = (currentHour < 6 || currentHour > 18) ? 0 : parseFloat(currentData.solar_w || 0);
             document.getElementById('solarVal').innerText = solarVal.toFixed(0);
 
@@ -168,12 +235,12 @@
         }
 
         function renderChart(weatherArray) {
+            const config = metricConfig[currentMetric];
             let labels = [], values = [];
 
             if (currentRange === 'hourly') {
                 labels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
                 values = new Array(24).fill(null);
-                // กรองข้อมูลวันแรกใน JSON มาโชว์
                 const baseDate = weatherArray[0].datetime.split(' ')[0];
                 weatherArray.forEach(d => {
                     if (d.datetime.startsWith(baseDate)) {
@@ -182,10 +249,8 @@
                     }
                 });
             } else {
-                // 📊 7 Days Average Fix (แก้ NaN)
                 const dayMap = {};
                 weatherArray.forEach(d => {
-                    // คำนวณวันที่แบบ Local (+7)
                     let dt = new Date(d.datetime.replace(" ", "T") + "Z");
                     dt.setHours(dt.getHours() + 7);
                     const k = dt.toLocaleDateString('en-CA');
@@ -193,7 +258,6 @@
                     const v = parseFloat(d[currentMetric]);
                     if (!isNaN(v)) { dayMap[k].s += v; dayMap[k].c++; }
                 });
-
                 for (let i = 0; i < 7; i++) {
                     const d = new Date(); d.setDate(d.getDate() + i);
                     const k = d.toLocaleDateString('en-CA');
@@ -204,30 +268,35 @@
 
             weatherChart.data.labels = labels;
             weatherChart.data.datasets[0].data = values;
+            weatherChart.data.datasets[0].borderColor = config.color;
+            weatherChart.data.datasets[0].backgroundColor = config.color + '15';
             weatherChart.update();
 
-            document.getElementById('chartTitle').innerText = `แนวโน้ม${metricLabel[currentMetric]} (${currentRange === 'hourly' ? '24 ชม.' : '7 วัน'})`;
+            document.getElementById('chartTitle').innerText = `${config.label} TREND`;
+            
             document.getElementById('timeBlocks').innerHTML = labels.map((l, i) => {
                 if (values[i] === null) return '';
-                return `<div class="card-glass p-3 rounded-xl border border-slate-700 text-center">
-                    <div class="text-[10px] text-slate-500 uppercase mb-1">${l}</div>
-                    <div class="text-lg font-bold text-white">${values[i]}</div>
-                    <div class="text-[9px] text-slate-600">${metricUnit[currentMetric]}</div>
+                return `<div class="min-w-[100px] bg-slate-800/40 p-4 rounded-2xl border border-slate-700/50 text-center">
+                    <div class="text-[9px] text-slate-500 font-bold mb-1 uppercase">${l}</div>
+                    <div class="text-lg font-bold">${values[i]}</div>
+                    <div class="text-[8px] opacity-40">${config.unit}</div>
                 </div>`;
             }).join('');
         }
 
         function setMetric(m, el) {
             currentMetric = m;
-            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-card'));
-            el.classList.add('active-card');
+            document.querySelectorAll('.stat-card').forEach(c => {
+                c.className = "stat-card p-4";
+            });
+            el.classList.add('active-card-' + m.split('_')[0]);
             updateDashboard();
         }
 
         function setRange(r) {
             currentRange = r;
-            document.getElementById('btn-hourly').className = r === 'hourly' ? "active-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all" : "text-slate-400 px-4 py-1.5 rounded-lg text-xs font-bold transition-all";
-            document.getElementById('btn-daily').className = r === 'daily' ? "active-btn px-4 py-1.5 rounded-lg text-xs font-bold transition-all" : "text-slate-400 px-4 py-1.5 rounded-lg text-xs font-bold transition-all";
+            document.getElementById('btn-hourly').classList.toggle('active', r === 'hourly');
+            document.getElementById('btn-daily').classList.toggle('active', r === 'daily');
             updateDashboard();
         }
 
