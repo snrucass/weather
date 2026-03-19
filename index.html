@@ -8,7 +8,7 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;600&display=swap');
         
         :root {
             --bg-deep: #050a15;
@@ -19,6 +19,14 @@
             --neon-cyan: #06b6d4;
             --neon-yellow: #eab308;
         }
+
+			/* นำเข้าฟอนต์ Inter และสร้าง class ควบคุมหน่วย */
+
+		.unit-text {
+			font-family: 'Inter', sans-serif;
+			text-transform: none !important;
+			letter-spacing: 0;
+		}
 
         body { 
             font-family: 'Chakra+Petch', sans-serif; 
