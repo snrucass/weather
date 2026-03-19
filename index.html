@@ -146,17 +146,40 @@
         let currentMetric = "temp_c";
         let currentRange = "hourly";
 
+        // คอนฟิกค่าคงที่
         const keyMap = { temp: "temp_c", humid: "rh2", wind: "wind_ms", rain: "rain_mm", cloud: "cloud_lv14", solar: "solar_w" };
         const metricUnit = { temp_c: "°C", rh2: "%", wind_ms: "m/s", rain_mm: "มม.", cloud_lv14: "%", solar_w: "W/m²" };
         const metricLabel = { temp_c: "อุณหภูมิ", rh2: "ความชื้น", wind_ms: "ลม", rain_mm: "ฝน", cloud_lv14: "เมฆ", solar_w: "แสงแดด" };
 
+        // 1. Initialize Chart
         const ctx = document.getElementById('weatherChart').getContext('2d');
         weatherChart = new Chart(ctx, {
             type: 'line',
-            data: { labels: [], datasets: [{ data: [], borderColor: '#3b82f6', backgroundColor: 'rgba(59, 130, 246, 0.1)', fill: true, tension: 0.4, borderWidth: 4, pointRadius: 4, spanGaps: true }] },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { grid: { color: '#334155' }, ticks: { color: '#64748b' } }, x: { grid: { display: false }, ticks: { color: '#64748b' } } } }
+            data: { 
+                labels: [], 
+                datasets: [{ 
+                    data: [], 
+                    borderColor: '#3b82f6', 
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)', 
+                    fill: true, 
+                    tension: 0.4, 
+                    borderWidth: 4, 
+                    pointRadius: 4, 
+                    spanGaps: true 
+                }] 
+            },
+            options: { 
+                responsive: true, 
+                maintainAspectRatio: false, 
+                plugins: { legend: { display: false } }, 
+                scales: { 
+                    y: { grid: { color: '#334155' }, ticks: { color: '#64748b' } }, 
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } } 
+                } 
+            }
         });
 
+        // 2. ดึงข้อมูล JSON
         async function init() {
             try {
                 const res = await fetch('weather_data_locations.json?t=' + Date.now());
@@ -191,52 +214,64 @@
             el.style.display = isHidden ? 'block' : 'none';
         }
 
+        // 3. ฟังก์ชันหลักในการอัปเดต Dashboard
         function updateDashboard() {
+            if (!districtData.length) return;
             const village = districtData[currentDistrictIdx].villages[currentVillageIdx];
             const raw = village.weather_data;
 
-            // 1. Time Calculation (+7h)
+            // --- ตรรกะการจัดการเวลา (UTC + 6) ---
             const now = new Date();
-            const currentHour = now.getHours();
+            const currentHour = now.getHours(); // เวลาเครื่องจริง
             const todayStr = now.toISOString().split('T')[0];
 
+            // ค้นหาข้อมูลใน JSON โดยแปลงเวลาใน JSON ให้เป็น UTC+6 ก่อนเปรียบเทียบ
             let currentData = raw.find(d => {
-                let dTime = new Date(d.datetime.replace(" ", "T") + "Z");
-                dTime.setHours(dTime.getHours() + 7);
-                return dTime.getHours() === currentHour && dTime.toISOString().split('T')[0] === todayStr;
-            }) || raw[raw.length - 1];
+                let dTime = new Date(d.datetime.replace(" ", "T") + "Z"); // อ่านเป็น UTC
+                dTime.setHours(dTime.getHours() + 6); // 🕒 บวกแค่ 6 ตามสั่ง
+                
+                return dTime.getHours() === currentHour && 
+                       dTime.toISOString().split('T')[0] === todayStr;
+            });
 
-            // 2. UI Update
+            // Fallback: ถ้ายังไม่มีข้อมูลชั่วโมงปัจจุบัน ให้ใช้ตัวล่าสุด
+            if (!currentData) currentData = raw[raw.length - 1];
+
+            // อัปเดต UI ข้อความ
             document.getElementById('locName').innerText = village.village_name;
             document.getElementById('locDetail').innerText = `ตำบล${village.subdistrict} · อำเภอ${village.district} · สกลนคร`;
             document.getElementById('locCoords').innerText = `LAT: ${village.coordinates.model_lat.toFixed(4)} | LON: ${village.coordinates.model_lon.toFixed(4)}`;
-            document.getElementById('currentTimeDisp').innerText = `TIME SYNC (UTC+7): ${now.toLocaleTimeString('th-TH')}`;
+            document.getElementById('currentTimeDisp').innerText = `TIME SYNC (UTC+6): ${now.toLocaleTimeString('th-TH')}`;
 
-            document.getElementById('tempVal').innerText = currentData.temp_c.toFixed(1);
-            document.getElementById('humidVal').innerText = currentData.rh2.toFixed(1);
-            document.getElementById('windVal').innerText = currentData.wind_ms.toFixed(1);
-            document.getElementById('rainVal').innerText = currentData.rain_mm.toFixed(1);
-            document.getElementById('cloudVal').innerText = currentData.cloud_lv14.toFixed(0);
-            document.getElementById('solarVal').innerText = currentData.solar_w.toFixed(0);
+            // อัปเดตตัวเลขในการ์ด
+            const safe = (val) => (val !== undefined && val !== null) ? val.toFixed(1) : "--";
+            document.getElementById('tempVal').innerText = safe(currentData.temp_c);
+            document.getElementById('humidVal').innerText = safe(currentData.rh2);
+            document.getElementById('windVal').innerText = safe(currentData.wind_ms);
+            document.getElementById('rainVal').innerText = safe(currentData.rain_mm);
+            document.getElementById('cloudVal').innerText = safe(currentData.cloud_lv14);
+            document.getElementById('solarVal').innerText = currentData.solar_w ? currentData.solar_w.toFixed(0) : "--";
 
-            // 3. Chart Update
             updateChart(raw);
         }
 
+        // 4. ฟังก์ชันจัดการกราฟ (Hourly 24h & Daily 7 Days)
         function updateChart(weatherArray) {
-            const cfg = { hourly: currentRange === 'hourly' };
             let labels = [];
             let values = [];
 
+            // แปลงข้อมูลทั้งหมดใน Array ให้เป็นเวลา Local (UTC+6)
             const processed = weatherArray.map(d => {
                 let dt = new Date(d.datetime.replace(" ", "T") + "Z");
-                dt.setHours(dt.getHours() + 7);
+                dt.setHours(dt.getHours() + 6); // 🕒 บวก 6
                 return { ...d, localDt: dt };
             });
 
-            if (cfg.hourly) {
+            if (currentRange === 'hourly') {
+                // FIXED 24 ชม. (00:00 - 23:00) ของ "วันนี้"
                 labels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
                 values = new Array(24).fill(null);
+                
                 const today = new Date().toISOString().split('T')[0];
                 processed.forEach(d => {
                     if (d.localDt.toISOString().split('T')[0] === today) {
@@ -244,29 +279,38 @@
                     }
                 });
             } else {
-                const map = {};
+                // FIXED 7 วัน (เริ่มนับจาก "วันนี้" ของผู้ใช้)
+                const dayMap = {};
                 processed.forEach(d => {
-                    const day = d.localDt.toISOString().split('T')[0];
-                    if (!map[day]) map[day] = { s: 0, c: 0 };
-                    map[day].s += d[currentMetric]; map[day].c++;
+                    const dayKey = d.localDt.toISOString().split('T')[0];
+                    if (!dayMap[dayKey]) dayMap[dayKey] = { s: 0, c: 0 };
+                    dayMap[dayKey].s += d[currentMetric]; 
+                    dayMap[dayKey].c++;
                 });
+
                 for (let i = 0; i < 7; i++) {
-                    const d = new Date(); d.setDate(d.getDate() + i);
+                    const d = new Date(); // วันนี้
+                    d.setDate(d.getDate() + i);
                     const key = d.toISOString().split('T')[0];
+                    
                     labels.push(d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
-                    values.push(map[key] ? (map[key].s / map[key].c).toFixed(1) : null);
+                    // ดึงค่าเฉลี่ย ถ้าไม่มีข้อมูลให้เป็น null เพื่อให้กราฟว่าง
+                    values.push(dayMap[key] ? (dayMap[key].s / dayMap[key].c).toFixed(1) : null);
                 }
             }
 
+            // อัปเดตกราฟ
             weatherChart.data.labels = labels;
             weatherChart.data.datasets[0].data = values;
             weatherChart.update();
 
+            // อัปเดต Title และบล็อกรายละเอียดด้านขวา
             document.getElementById('chartTitle').innerText = `แนวโน้ม${metricLabel[currentMetric]} (${currentRange === 'hourly' ? '24 ชม.' : '7 วัน'})`;
             
             const container = document.getElementById('timeBlocks');
             container.innerHTML = labels.map((l, i) => {
-                if (values[i] === null && !cfg.hourly) return '';
+                // ในโหมด 7 วัน ถ้าไม่มีข้อมูลเฉลี่ย ไม่ต้องโชว์การ์ด
+                if (values[i] === null && currentRange === 'daily') return '';
                 return `
                     <div class="card-glass p-3 rounded-xl border border-slate-700 text-center transition hover:bg-slate-800">
                         <div class="text-[10px] text-slate-500 uppercase mb-1">${l}</div>
@@ -277,6 +321,7 @@
             }).join('');
         }
 
+        // 5. ปุ่มควบคุม
         function setMetric(m, el) {
             currentMetric = keyMap[m];
             document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active-card'));
@@ -292,6 +337,7 @@
         }
 
         init();
+        // ตรวจเช็คเวลาทุก 1 นาที เพื่อให้หน้าเว็บตรงกับเวลาปัจจุบันเสมอ
         setInterval(updateDashboard, 60000);
     </script>
 </body>
