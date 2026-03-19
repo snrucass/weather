@@ -209,11 +209,11 @@
 
         weatherChart = new Chart(ctx, {
             type: 'line',
-			plugins: [ChartDataLabels],
+            plugins: [ChartDataLabels], // ลงทะเบียน plugin
             data: { 
                 labels: [], 
                 datasets: [{ 
-                    label: '', // ล้าง label เพื่อไม่ให้ขึ้น undefined
+                    label: '', 
                     data: [], 
                     fill: true, 
                     tension: 0.45, 
@@ -226,28 +226,29 @@
                 responsive: true, 
                 maintainAspectRatio: false, 
                 plugins: {
-                    legend: { display: false }, // ปิด Legend เพื่อแก้ปัญหา undefined
-					datalabels: {
-						display: true,
-						align: 'top',
-						anchor: 'end',
-						color: '#ffffff', // สีขาวสู้แสงแดด
-						offset: 4,
-						font: {
-							size: 11,
-							weight: 'bold'
-						},
-						formatter: (value) => value // หรือ value.toFixed(1) ถ้าอยากได้ทศนิยม
+                    legend: { display: false }, // ปิด Legend
+                    datalabels: { // ย้ายเข้ามาอยู่ใน plugins
+                        display: true,
+                        align: 'top',
+                        anchor: 'end',
+                        color: '#ffffff',
+                        offset: 4,
+                        font: {
+                            size: 11,
+                            weight: 'bold'
+                        },
+                        formatter: (value) => value !== null ? parseFloat(value).toFixed(1) : ''
+                    }
                 },
                 layout: {
-                    padding: { left: 0 } 
+                    padding: { left: 0, top: 20 } // เพิ่ม top padding เพื่อไม่ให้ตัวเลขบนจุดโดนขอบตัด
                 },
                 scales: { 
                     y: { 
                         display: true, 
                         grid: { color: 'rgba(255,255,255,0.03)' }, 
                         ticks: { display: false },
-                        afterFit: (axis) => { axis.width = 45; } // ตรึงความกว้างแกน Y ไว้ที่ 45px
+                        afterFit: (axis) => { axis.width = 45; } // ตรึงความกว้างแกน Y
                     },
                     x: {
                         ticks: { color: '#64748b', font: { size: 10 } }
@@ -259,20 +260,19 @@
             }
         });
 
-        // ฟังก์ชันวาดแกน Y แยกต่างหากเพื่อล็อคตำแหน่ง
+        // ฟังก์ชันวาดแกน Y แยกต่างหากเพื่อล็อคตำแหน่ง (คงเดิม)
         function drawFixedAxis(chart) {
             const yAxis = chart.scales.y;
             axisCanvas.height = chart.height;
-            axisCanvas.width = 50; // กำหนดความกว้างของแกนที่ตรึง
+            axisCanvas.width = 50; 
             
             axisCtx.clearRect(0, 0, 50, chart.height);
-            axisCtx.font = "bold 11px sans-serif"; // ใช้ฟอนต์ที่คุณตั้งค่าไว้
+            axisCtx.font = "bold 11px sans-serif"; 
             axisCtx.fillStyle = "#64748b";
             axisCtx.textAlign = "right";
             
             yAxis.ticks.forEach((tick) => {
                 const y = yAxis.getPixelForValue(tick.value);
-                // วาดตัวเลขลงบน Canvas แกน Y ที่ตรึงไว้
                 axisCtx.fillText(tick.label, 40, y + 4);
             });
         }
