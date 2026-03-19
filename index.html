@@ -79,7 +79,7 @@
     <header class="p-4 bg-[#0a1120] border-b border-slate-800 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto flex flex-col gap-4">
             <div class="flex justify-between items-center">
-                <h1 class="text-xl font-black italic tracking-tighter text-blue-500 uppercase">CASS <span class="text-white">INTEL</span></h1>
+                <h1 class="text-xl font-black italic tracking-tighter text-blue-500 uppercase">CASS <span class="text-white">Weather</span></h1>
                 <div id="currentTimeDisp" class="text-[9px] font-mono font-bold text-emerald-400 uppercase">UTC+7 SYNCING</div>
             </div>
             
@@ -115,37 +115,37 @@
 
         <section class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
             <div id="card-temp_c" onclick="setMetric('temp_c', this)" class="stat-card p-5 active-card-temp">
-                <div class="flex items-center gap-2 mb-2 text-orange-400"><i data-lucide="thermometer" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">Temp</span></div>
-                <div class="text-4xl font-bold text-white"><span id="tempVal">--</span><span class="text-lg opacity-30">°</span></div>
+                <div class="flex items-center gap-2 mb-2 text-orange-400"><i data-lucide="thermometer" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">อุณหภูมิ</span></div>
+                <div class="text-4xl font-bold text-white"><span id="tempVal">--</span><span class="text-lg opacity-30">°C</span></div>
             </div>
             <div id="card-rh2" onclick="setMetric('rh2', this)" class="stat-card p-5">
-                <div class="flex items-center gap-2 mb-2 text-blue-400"><i data-lucide="droplets" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">Humid</span></div>
-                <div class="text-4xl font-bold text-white"><span id="humidVal">--</span><span class="text-lg opacity-30">%</span></div>
+                <div class="flex items-center gap-2 mb-2 text-blue-400"><i data-lucide="droplets" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">ความชื้น</span></div>
+                <div class="text-4xl font-bold text-white"><span id="humidVal">--</span><span class="text-lg opacity-30"></span>%</div>
             </div>
             <div id="card-wind_ms" onclick="setMetric('wind_ms', this)" class="stat-card p-5">
-                <div class="flex items-center gap-2 mb-2 text-green-400"><i data-lucide="wind" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">Wind</span></div>
+                <div class="flex items-center gap-2 mb-2 text-green-400"><i data-lucide="wind" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">แรงลม</span></div>
                 <div class="text-4xl font-bold text-white"><span id="windVal">--</span><span class="text-xs opacity-30 ml-1">m/s</span></div>
             </div>
             <div id="card-rain_mm" onclick="setMetric('rain_mm', this)" class="stat-card p-5">
-                <div class="flex items-center gap-2 mb-2 text-cyan-400"><i data-lucide="cloud-rain" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">Rain</span></div>
+                <div class="flex items-center gap-2 mb-2 text-cyan-400"><i data-lucide="cloud-rain" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">น้ำฝน</span></div>
                 <div class="text-4xl font-bold text-white"><span id="rainVal">--</span><span class="text-xs opacity-30 ml-1">mm</span></div>
             </div>
             <div id="card-cloud_lv14" onclick="setMetric('cloud_lv14', this)" class="stat-card p-5">
-                <div class="flex items-center gap-2 mb-2 text-slate-400"><i data-lucide="cloud" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">Cloud</span></div>
+                <div class="flex items-center gap-2 mb-2 text-slate-400"><i data-lucide="cloud" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">เมฆ</span></div>
                 <div class="text-4xl font-bold text-white"><span id="cloudVal">--</span><span class="text-lg opacity-30">%</span></div>
             </div>
             <div id="card-solar_w" onclick="setMetric('solar_w', this)" class="stat-card p-5">
-                <div class="flex items-center gap-2 mb-2 text-yellow-400"><i data-lucide="sun" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">Solar</span></div>
+                <div class="flex items-center gap-2 mb-2 text-yellow-400"><i data-lucide="sun" class="w-4 h-4"></i> <span class="text-[9px] font-black uppercase">แสงแดด</span></div>
                 <div class="text-4xl font-bold text-white"><span id="solarVal">--</span><span class="text-[10px] opacity-30 ml-1">W/m²</span></div>
             </div>
         </section>
 
         <section class="p-6 rounded-[32px] bg-[#0d1526] border border-slate-800 shadow-2xl mb-8">
             <div class="flex justify-between items-center mb-6">
-                <h3 id="chartTitle" class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">TREND</h3>
+                <h3 id="chartTitle" class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">แนวโน้ม</h3>
                 <div class="flex gap-1 bg-slate-900 p-1 rounded-xl">
-                    <button id="btn-hourly" onclick="setRange('hourly')" class="btn-range active">24H</button>
-                    <button id="btn-daily" onclick="setRange('daily')" class="btn-range">7D</button>
+                    <button id="btn-hourly" onclick="setRange('hourly')" class="btn-range active">1วัน</button>
+                    <button id="btn-daily" onclick="setRange('daily')" class="btn-range">7วัน</button>
                 </div>
             </div>
             <div style="height: 250px; width: 100%;"><canvas id="weatherChart"></canvas></div>
@@ -167,7 +167,7 @@
             wind_ms: { label: "แรงลม", unit: "m/s", color: "#4ade80" },
             rain_mm: { label: "น้ำฝน", unit: "mm", color: "#22d3ee" },
             cloud_lv14: { label: "เมฆ", unit: "%", color: "#94a3b8" },
-            solar_w: { label: "รังสีอาทิตย์", unit: "W/m²", color: "#facc15" }
+            solar_w: { label: "แสงแดด", unit: "W/m²", color: "#facc15" }
         };
 
         const ctx = document.getElementById('weatherChart').getContext('2d');
