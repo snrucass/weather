@@ -128,7 +128,6 @@
         let currentMetric = 'temp_c';
         let currentMode = 'hourly';
 
-        // การตั้งค่าสีและหน่วยของแต่ละตัวแปร
         const configMap = {
             temp_c: { label: 'อุณหภูมิ', unit: '°C', color: '#3b82f6', bg: 'rgba(59, 130, 246, 0.1)' },
             rh: { label: 'ความชื้น', unit: '%', color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
@@ -141,13 +140,13 @@
             const ctx = document.getElementById('weatherChart').getContext('2d');
             weatherChart = new Chart(ctx, {
                 type: 'line',
-                data: { labels: [], datasets: [{ data: [], borderWidth: 3, tension: 0.3, fill: true, pointRadius: 2 }]},
+                data: { labels: [], datasets: [{ data: [], borderWidth: 3, tension: 0.3, fill: true, pointRadius: 3, spanGaps: true }]},
                 options: { 
                     responsive: true, maintainAspectRatio: false,
                     plugins: { legend: { display: false } },
                     scales: { 
-                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b', font: { size: 10 } } },
-                        x: { grid: { display: false }, ticks: { color: '#64748b', font: { size: 10 }, maxRotation: 45, minRotation: 45 } } 
+                        y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#64748b' } },
+                        x: { grid: { display: false }, ticks: { color: '#64748b', maxRotation: 0, autoSkip: true, maxTicksLimit: 12 } } 
                     }
                 }
             });
@@ -158,15 +157,11 @@
                 const response = await fetch('weather_data_locations.json?t=' + Date.now());
                 weatherData = await response.json();
                 const stations = Object.keys(weatherData);
-                
                 const container = document.getElementById('locationDropdown');
-                container.innerHTML = stations.map(name => `
-                    <a href="#" onclick="updateUI('${name}')" class="block px-4 py-3 hover:bg-blue-600 text-sm border-t border-slate-700 first:border-0">${name}</a>
-                `).join('');
-
+                container.innerHTML = stations.map(name => `<a href="#" onclick="updateUI('${name}')" class="block px-4 py-3 hover:bg-blue-600 text-sm border-t border-slate-700 first:border-0">${name}</a>`).join('');
                 if (!currentStation) currentStation = stations[0];
                 updateUI(currentStation);
-            } catch (e) { console.error("Error fetching JSON:", e); }
+            } catch (e) { console.error(e); }
         }
 
         function setMetric(metric) {
@@ -180,16 +175,13 @@
             currentStation = name;
             const station = weatherData[name];
             const latest = station.data[station.data.length - 1];
-
             document.getElementById('locName').innerText = name;
             document.getElementById('locCoords').innerText = `LAT: ${station.metadata.actual_lat.toFixed(4)} | LON: ${station.metadata.actual_lon.toFixed(4)}`;
-            
             document.getElementById('statTemp').innerText = latest.temp_c.toFixed(1);
             document.getElementById('statHumid').innerText = latest.rh.toFixed(0);
             document.getElementById('statWind').innerText = latest.wind_ms.toFixed(1);
             document.getElementById('statSolar').innerText = latest.solar_w.toFixed(0);
             document.getElementById('statCloud').innerText = latest.cloud_lv14.toFixed(0);
-
             updateChartMode(currentMode);
         }
 
@@ -197,66 +189,81 @@
             currentMode = mode;
             const station = weatherData[currentStation];
             const cfg = configMap[currentMetric];
-
             document.getElementById('btnHourly').classList.toggle('active-btn', mode === 'hourly');
             document.getElementById('btnDaily').classList.toggle('active-btn', mode === 'daily');
-            document.getElementById('chartTitle').innerText = `แนวโน้ม${cfg.label} (${mode==='hourly'?'24 ชม.':'7 วัน'})`;
 
             weatherChart.data.datasets[0].borderColor = cfg.color;
             weatherChart.data.datasets[0].backgroundColor = cfg.bg;
             weatherChart.data.datasets[0].pointBackgroundColor = cfg.color;
 
             if (mode === 'hourly') {
-                // แสดงผลครบทุกชั่วโมงที่มีในข้อมูล (ปกติ WRF จะให้มา 24-48 ชม.)
-                weatherChart.data.labels = station.data.map(d => d.datetime.split(' ')[1].substring(0,5));
-                weatherChart.data.datasets[0].data = station.data.map(d => d[currentMetric]);
+                document.getElementById('chartTitle').innerText = `แนวโน้ม${cfg.label} (24 ชม.)`;
                 
-                // Side Cards: แสดง 6 ช่วงเวลาล่าสุด
+                // สร้างแกน X 00:00 ถึง 23:00 รอไว้เลย
+                const full24hLabels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
+                const full24hData = new Array(24).fill(null);
+
+                // เอาข้อมูลที่มีใน JSON ไปหยอดลงตามตำแหน่งชั่วโมง
+                station.data.forEach(d => {
+                    const hour = parseInt(d.datetime.split(' ')[1].split(':')[0]);
+                    if (hour >= 0 && hour < 24) {
+                        full24hData[hour] = d[currentMetric];
+                    }
+                });
+
+                weatherChart.data.labels = full24hLabels;
+                weatherChart.data.datasets[0].data = full24hData;
                 renderSide(station.data.slice(-8).reverse(), 'hourly');
             } else {
-                // คำนวณค่าเฉลี่ยรายวัน
-                const daily = calculateDaily(station.data);
-                weatherChart.data.labels = daily.map(d => d.label);
-                weatherChart.data.datasets[0].data = daily.map(d => d.val);
+                document.getElementById('chartTitle').innerText = `แนวโน้ม${cfg.label} (7 วัน)`;
                 
-                renderSide(daily, 'daily');
+                // สร้างแกน X สำหรับ 7 วัน (นับจากวันนี้)
+                const dailyLabels = [];
+                const dailyData = [];
+                const dayMap = {};
+
+                // คำนวณค่าเฉลี่ยจากข้อมูลที่มี
+                station.data.forEach(d => {
+                    const date = d.datetime.split(' ')[0];
+                    if (!dayMap[date]) dayMap[date] = { sum: 0, count: 0 };
+                    dayMap[date].sum += d[currentMetric];
+                    dayMap[date].count++;
+                });
+
+                for (let i = 0; i < 7; i++) {
+                    const d = new Date();
+                    d.setDate(d.getDate() + i);
+                    const dateISO = d.toISOString().split('T')[0];
+                    const label = d.toLocaleDateString('th-TH', {day:'numeric', month:'short'});
+                    
+                    dailyLabels.push(label);
+                    dailyData.push(dayMap[dateISO] ? (dayMap[dateISO].sum / dayMap[dateISO].count).toFixed(1) : null);
+                }
+
+                weatherChart.data.labels = dailyLabels;
+                weatherChart.data.datasets[0].data = dailyData;
+                
+                // Side cards โชว์เฉพาะวันที่มีข้อมูลจริง
+                const filteredDaily = dailyLabels.map((l, i) => ({label: l, val: dailyData[i]})).filter(v => v.val !== null);
+                renderSide(filteredDaily, 'daily');
             }
             weatherChart.update();
-        }
-
-        function calculateDaily(data) {
-            const groups = {};
-            data.forEach(d => {
-                const dateStr = d.datetime.split(' ')[0];
-                if (!groups[dateStr]) groups[dateStr] = { sum: 0, count: 0 };
-                groups[dateStr].sum += d[currentMetric];
-                groups[dateStr].count++;
-            });
-
-            // แปลง Object เป็น Array และเรียงลำดับวันที่
-            return Object.keys(groups).sort().map(date => ({
-                label: new Date(date).toLocaleDateString('th-TH', {day:'numeric', month:'short'}),
-                val: (groups[date].sum / groups[date].count).toFixed(1)
-            }));
         }
 
         function renderSide(items, mode) {
             const container = document.getElementById('sideContainer');
             const cfg = configMap[currentMetric];
-            
             container.innerHTML = items.map(d => `
-                <div class="bg-slate-800/50 p-3 rounded-2xl border border-slate-700/50 text-center transition-all hover:border-blue-500/50">
-                    <p class="text-[9px] mb-1 opacity-50 text-blue-400 uppercase font-bold">
-                        ${mode === 'hourly' ? d.datetime.split(' ')[1].substring(0,5) : d.label}
-                    </p>
-                    <p class="text-lg font-bold text-white">${mode === 'hourly' ? d[currentMetric].toFixed(1) : d.val}<span class="text-[10px] ml-0.5 font-normal opacity-40">${cfg.unit}</span></p>
+                <div class="bg-slate-800/50 p-3 rounded-2xl border border-slate-700/50 text-center">
+                    <p class="text-[9px] mb-1 opacity-50 text-blue-400 uppercase font-bold">${mode==='hourly'?d.datetime.split(' ')[1].substring(0,5):d.label}</p>
+                    <p class="text-lg font-bold text-white">${mode==='hourly'?d[currentMetric].toFixed(1):d.val}<span class="text-[10px] ml-0.5 font-normal opacity-40">${cfg.unit}</span></p>
                 </div>
             `).join('');
         }
 
         initChart();
         fetchData();
-        setInterval(fetchData, 300000); // อัปเดตข้อมูลทุก 5 นาที
+        setInterval(fetchData, 300000);
     </script>
 </body>
 </html>
