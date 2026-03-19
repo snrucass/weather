@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CASS | Weather Intelligence Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@300;400;600;700&display=swap');
+        body { font-family: 'Chakra+Petch', sans-serif; background-color: #0f172a; color: #cbd5e1; }
+        .card-glass { background: rgba(30, 41, 59, 0.7); border: 1px solid rgba(51, 65, 85, 0.5); backdrop-filter: blur(10px); }
+        .dropdown-content { display: none; position: absolute; background-color: #1e293b; min-width: 200px; box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.5); z-index: 100; border-radius: 12px; border: 1px solid #334155; margin-top: 8px; }
+        .dropdown:hover .dropdown-content { display: block; }
+        .stat-card { border-radius: 24px; padding: 1.5rem; transition: all 0.3s ease; border: 2px solid transparent; }
+        .stat-card:hover { transform: translateY(-5px); border-color: #3b82f6; }
+        .day-column { transition: all 0.3s ease; }
+        .day-column:hover { background: rgba(59, 130, 246, 0.1); }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen">
+
+    <header class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-10 gap-6">
+        <div class="flex items-center gap-3">
+            <div class="p-3 bg-blue-600 rounded-2xl shadow-lg shadow-blue-600/30">
+                <i data-lucide="layout-dashboard" class="text-white w-6 h-6"></i>
+            </div>
+            <h1 class="text-2xl font-bold tracking-tight text-white uppercase">CASS <span class="text-blue-400 font-light">DASHBOARD</span></h1>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+            <div class="dropdown relative">
+                <button class="bg-blue-600 text-white px-5 py-2.5 rounded-full text-sm font-semibold flex items-center gap-2">
+                    อำเภอเมืองสกลนคร <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                </button>
+                <div class="dropdown-content overflow-hidden">
+                    <a href="#" onclick="updateUI(0)" class="block px-4 py-3 hover:bg-blue-600 text-sm">บ้านบึงแดง ม.7</a>
+                    <a href="#" onclick="updateUI(1)" class="block px-4 py-3 hover:bg-blue-600 text-sm border-t border-slate-700">บ้านโนนประดู่ ม.7</a>
+                    <a href="#" onclick="updateUI(2)" class="block px-4 py-3 hover:bg-blue-600 text-sm border-t border-slate-700">บ้านโนนกุง ม.8</a>
+                </div>
+            </div>
+            <button class="card-glass text-slate-300 px-5 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 border border-slate-700 opacity-50 cursor-not-allowed">
+                อำเภอโคกศรีสุพรรณ <i data-lucide="lock" class="w-3 h-3"></i>
+            </button>
+            <button class="card-glass text-slate-300 px-5 py-2.5 rounded-full text-sm font-medium flex items-center gap-2 border border-slate-700 opacity-50 cursor-not-allowed">
+                อำเภอโพนนาแก้ว <i data-lucide="lock" class="w-3 h-3"></i>
+            </button>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto">
+        <div class="mb-10 border-l-4 border-blue-500 pl-8 text-white uppercase tracking-tighter italic">
+            <h2 id="locName" class="text-5xl font-bold mb-2">บ้านบึงแดง</h2>
+            <div class="flex flex-col gap-1 text-slate-400 text-sm tracking-widest not-italic uppercase">
+                <p id="locDetail">ตำบลโคกก่อ · อำเภอเมืองสกลนคร · จังหวัดสกลนคร</p>
+                <p id="locCoords" class="font-mono text-blue-400/80 tracking-normal">LAT: 17.15°N | LON: 104.05°E</p>
+                <p class="mt-2 text-[10px] font-bold">Administered by: <span class="text-white underline decoration-blue-500">CASS</span></p>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+            <div class="card-glass stat-card border-orange-500/30">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-orange-500/10 rounded-xl text-orange-500"><i data-lucide="thermometer" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-bold opacity-40 uppercase">Temp</span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="statTemp" class="text-3xl font-bold text-white">31</span><span class="text-slate-500">°C</span>
+                </div>
+            </div>
+            <div class="card-glass stat-card border-blue-500/30">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-blue-500/10 rounded-xl text-blue-500"><i data-lucide="droplets" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-bold opacity-40 uppercase">Humid</span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="statHumid" class="text-3xl font-bold text-white">85</span><span class="text-slate-500">%</span>
+                </div>
+            </div>
+            <div class="card-glass stat-card border-indigo-500/30">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-indigo-500/10 rounded-xl text-indigo-500"><i data-lucide="wind" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-bold opacity-40 uppercase">Wind</span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="statWind" class="text-3xl font-bold text-white">10</span><span class="text-slate-500">m/s</span>
+                </div>
+            </div>
+            <div class="card-glass stat-card border-emerald-500/30">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-emerald-500/10 rounded-xl text-emerald-500"><i data-lucide="cloud-rain" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-bold opacity-40 uppercase">Rain</span>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="statRain" class="text-3xl font-bold text-white">0</span><span class="text-slate-500">mm</span>
+                </div>
+            </div>
+            <div class="card-glass stat-card border-slate-500/20">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-slate-500/10 rounded-xl text-slate-300"><i data-lucide="cloud" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-bold opacity-40 uppercase">Cloud</span>
+                </div>
+                <div class="flex items-baseline gap-1 font-bold text-white">--<span class="text-slate-500 text-sm ml-1">%</span></div>
+            </div>
+            <div class="card-glass stat-card border-yellow-500/20">
+                <div class="flex justify-between items-start mb-4">
+                    <div class="p-2 bg-yellow-500/10 rounded-xl text-yellow-500"><i data-lucide="sun" class="w-5 h-5"></i></div>
+                    <span class="text-[9px] font-bold opacity-40 uppercase">Solar</span>
+                </div>
+                <div class="flex items-baseline gap-1 font-bold text-white">--<span class="text-slate-500 text-sm ml-1">W/m²</span></div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
+            <div class="lg:col-span-2 card-glass p-8 rounded-[32px]">
+                <h3 class="font-bold text-lg text-white mb-8 uppercase tracking-widest">แนวโน้มอุณหภูมิ รายชั่วโมง (°C)</h3>
+                <div class="h-[300px] w-full">
+                    <canvas id="weatherChart"></canvas>
+                </div>
+                
+                <div class="mt-10 pt-8 border-t border-slate-700/50">
+                    <h3 class="font-bold text-xs text-slate-500 mb-6 uppercase tracking-[0.2em]">พยากรณ์อากาศ 7 วันล่วงหน้า</h3>
+                    <div class="grid grid-cols-7 gap-2" id="forecast7Days">
+                        </div>
+                </div>
+            </div>
+
+            <div class="card-glass p-8 rounded-[32px] flex flex-col justify-center">
+                <h4 class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-10 text-center">รายละเอียดตามช่วงเวลา</h4>
+                <div class="grid grid-cols-2 gap-4 text-center">
+                    <div class="bg-blue-600/10 p-4 rounded-2xl border border-blue-500/20">
+                        <p class="text-[10px] mb-1 opacity-60 text-blue-400 uppercase">06:00 น.</p>
+                        <p class="text-2xl font-bold text-white" id="time06">31°</p>
+                    </div>
+                    <div class="bg-orange-600/10 p-4 rounded-2xl border border-orange-500/20">
+                        <p class="text-[10px] mb-1 opacity-60 text-orange-400 uppercase">09:00 น.</p>
+                        <p class="text-2xl font-bold text-white" id="time09">33°</p>
+                    </div>
+                    <div class="bg-red-600/10 p-4 rounded-2xl border border-red-500/20">
+                        <p class="text-[10px] mb-1 opacity-60 text-red-400 uppercase">12:00 น.</p>
+                        <p class="text-2xl font-bold text-white" id="time12">34°</p>
+                    </div>
+                    <div class="bg-emerald-500/20 p-4 rounded-2xl border border-emerald-500/40 ring-2 ring-emerald-500/40">
+                        <p class="text-[10px] mb-1 font-bold text-emerald-400 uppercase italic">ตอนนี้</p>
+                        <p class="text-2xl font-bold text-white" id="timeNow">32°</p>
+                    </div>
+                </div>
+                <div class="mt-8 text-center bg-slate-800/30 p-4 rounded-2xl">
+                    <p class="text-[10px] text-slate-500 uppercase tracking-widest leading-relaxed">
+                        Data provided by <br><span class="text-blue-400 font-bold italic">WRF Simulation Model</span>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="text-center py-10 opacity-30 text-[10px] tracking-[0.5em] uppercase">
+        Designed and Developed by CASS &copy; 2026
+    </footer>
+
+    <script>
+        lucide.createIcons();
+
+        // ฐานข้อมูลหมู่บ้าน (เพิ่มข้อมูล history7days)
+        const db = [
+            { 
+                name: "บ้านบึงแดง", sub: "ตำบลโคกก่อ", coords: "LAT: 17.15°N | LON: 104.05°E", 
+                temp: 31, humid: 85, wind: 10, rain: 0, 
+                history: [31, 33, 34, 33, 31, 30],
+                history7days: [
+                    { day: 'ศ.', temp: 31, icon: 'sun' }, { day: 'ส.', temp: 32, icon: 'sun' },
+                    { day: 'อา.', temp: 34, icon: 'sun' }, { day: 'จ.', temp: 33, icon: 'cloud-sun' },
+                    { day: 'อ.', temp: 30, icon: 'cloud-rain' }, { day: 'พ.', temp: 29, icon: 'cloud-rain' },
+                    { day: 'พฤ.', temp: 31, icon: 'sun' }
+                ]
+            },
+            { 
+                name: "บ้านโนนประดู่", sub: "ตำบลโนนประดู่", coords: "LAT: 17.12°N | LON: 104.08°E", 
+                temp: 29, humid: 75, wind: 5, rain: 2, 
+                history: [29, 31, 32, 31, 30, 29],
+                history7days: [
+                    { day: 'ศ.', temp: 29, icon: 'cloud-rain' }, { day: 'ส.', temp: 28, icon: 'cloud-rain' },
+                    { day: 'อา.', temp: 30, icon: 'cloud-sun' }, { day: 'จ.', temp: 31, icon: 'sun' },
+                    { day: 'อ.', temp: 32, icon: 'sun' }, { day: 'พ.', temp: 31, icon: 'sun' },
+                    { day: 'พฤ.', temp: 30, icon: 'cloud-sun' }
+                ]
+            },
+            { 
+                name: "บ้านโนนกุง", sub: "ตำบลโนนกุง", coords: "LAT: 17.18°N | LON: 104.02°E", 
+                temp: 33, humid: 60, wind: 12, rain: 0, 
+                history: [32, 34, 35, 34, 33, 32],
+                history7days: [
+                    { day: 'ศ.', temp: 33, icon: 'sun' }, { day: 'ส.', temp: 35, icon: 'sun' },
+                    { day: 'อา.', temp: 36, icon: 'sun' }, { day: 'จ.', temp: 34, icon: 'sun' },
+                    { day: 'อ.', temp: 33, icon: 'cloud-sun' }, { day: 'พ.', temp: 32, icon: 'cloud-sun' },
+                    { day: 'พฤ.', temp: 33, icon: 'sun' }
+                ]
+            }
+        ];
+
+        // Setup Chart
+        const ctx = document.getElementById('weatherChart').getContext('2d');
+        let weatherChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['06:00', '09:00', '12:00', '15:00', '18:00', '21:00'],
+                datasets: [{
+                    data: db[0].history,
+                    borderColor: '#3b82f6',
+                    borderWidth: 4,
+                    tension: 0.4,
+                    pointRadius: 6,
+                    pointBackgroundColor: '#fff',
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { min: 20, max: 40, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { stepSize: 5, color: '#64748b' } },
+                    x: { grid: { display: false }, ticks: { color: '#64748b' } }
+                }
+            }
+        });
+
+        // ฟังก์ชันสร้าง UI พยากรณ์ 7 วัน
+        function render7Days(idx) {
+            const container = document.getElementById('forecast7Days');
+            container.innerHTML = '';
+            db[idx].history7days.forEach(item => {
+                const col = document.createElement('div');
+                col.className = 'day-column text-center p-3 rounded-2xl border border-slate-800/50';
+                col.innerHTML = `
+                    <p class="text-[10px] text-slate-500 font-bold mb-3">${item.day}</p>
+                    <i data-lucide="${item.icon}" class="w-5 h-5 mx-auto mb-3 ${item.icon === 'sun' ? 'text-orange-400' : 'text-blue-400'}"></i>
+                    <p class="text-sm font-bold text-white">${item.temp}°</p>
+                `;
+                container.appendChild(col);
+            });
+            lucide.createIcons();
+        }
+
+        // ฟังก์ชันอัปเดตหน้าจอทั้งหมด
+        function updateUI(idx) {
+            const data = db[idx];
+            document.getElementById('locName').innerText = data.name;
+            document.getElementById('locDetail').innerText = `${data.sub} · อำเภอเมืองสกลนคร · จังหวัดสกลนคร`;
+            document.getElementById('locCoords').innerText = data.coords;
+            document.getElementById('statTemp').innerText = data.temp;
+            document.getElementById('statHumid').innerText = data.humid;
+            document.getElementById('statWind').innerText = data.wind;
+            document.getElementById('statRain').innerText = data.rain;
+            
+            document.getElementById('time06').innerText = data.history[0] + "°";
+            document.getElementById('time09').innerText = data.history[1] + "°";
+            document.getElementById('time12').innerText = data.history[2] + "°";
+            document.getElementById('timeNow').innerText = data.temp + "°";
+
+            weatherChart.data.datasets[0].data = data.history;
+            weatherChart.update();
+            render7Days(idx); // อัปเดตตาราง 7 วันด้วย
+        }
+
+        // เริ่มต้นแสดงผลครั้งแรก
+        render7Days(0);
+    </script>
+</body>
+</html>
