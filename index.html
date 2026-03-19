@@ -20,8 +20,8 @@
 		}
 
 		.chart-inner-container { 
-			min-width: 800px; 
-			height: 300px; 
+			min-width: 1200px; 
+			height: 320px; 
 		}
 
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;600&display=swap');
@@ -246,12 +246,21 @@
                 scales: { 
                     y: { 
                         display: true, 
-                        grid: { color: 'rgba(255,255,255,0.03)' }, 
+                        grid: { color: 'rgba(255,255,255,0.12)', lineWidth: 1 },
                         ticks: { display: false },
-                        afterFit: (axis) => { axis.width = 45; } // ตรึงความกว้างแกน Y
+                        afterFit: (axis) => { axis.width = 50; } // ตรึงความกว้างแกน Y
                     },
                     x: {
-                        ticks: { color: '#64748b', font: { size: 10 } }
+                        // เพิ่มขนาดฟอนต์แกน X เป็น 13 และปรับความหนาเป็น 600
+                        ticks: { 
+                            color: '#94a3b8', 
+                            font: { 
+                                size: 13,
+                                weight: '600'
+                            },
+                            padding: 10
+                        },
+                        grid: { display: false }
                     }
                 },
                 animation: { 
@@ -267,8 +276,8 @@
             axisCanvas.width = 50; 
             
             axisCtx.clearRect(0, 0, 50, chart.height);
-            axisCtx.font = "bold 11px sans-serif"; 
-            axisCtx.fillStyle = "#64748b";
+            axisCtx.font = "bold 12px sans-serif"; 
+            axisCtx.fillStyle = "#94a3b8";
             axisCtx.textAlign = "right";
             
             yAxis.ticks.forEach((tick) => {
