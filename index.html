@@ -9,9 +9,19 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
 
-		/* ทำให้กราฟเลื่อนซ้ายขวาได้ */
-		.chart-scroll-wrapper { width: 100%; overflow-x: auto; padding-bottom: 10px; }
-		.chart-inner-container { min-width: 800px; height: 300px; }
+		/* รวมเป็นก้อนเดียวเพื่อให้ทำงานครบทุกคำสั่ง */
+		.chart-scroll-wrapper { 
+			position: relative; /* สำคัญสำหรับการตรึงแกน Y */
+			width: 100%; 
+			overflow-x: auto; 
+			padding-bottom: 10px; 
+			-webkit-overflow-scrolling: touch; /* เพิ่มเพื่อให้เลื่อนในมือถือลื่นขึ้น */
+		}
+
+		.chart-inner-container { 
+			min-width: 800px; 
+			height: 300px; 
+		}
 
         @import url('https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@400;600;700&family=Inter:wght@400;600&display=swap');
         
@@ -189,17 +199,49 @@
 
         const ctx = document.getElementById('weatherChart').getContext('2d');
         weatherChart = new Chart(ctx, {
-            type: 'line',
-            data: { labels: [], datasets: [{ data: [], fill: true, tension: 0.45, borderWidth: 5, pointRadius: 5, pointBackgroundColor: '#fff' }] },
-            options: { 
-                responsive: true, maintainAspectRatio: false, 
-                plugins: { legend: { display: false } }, 
-                scales: { 
-                    y: { grid: { color: 'rgba(255,255,255,0.03)' }, ticks: { color: '#475569', font: { size: 10, weight: 'bold' } } }, 
-                    x: { grid: { display: false }, ticks: { color: '#475569', font: { size: 10, weight: 'bold' } } } 
-                } 
-            }
-        });
+			type: 'line',
+			data: { 
+				labels: [], 
+				datasets: [{ 
+					data: [], 
+					fill: true, 
+					tension: 0.45, 
+					borderWidth: 5, 
+					pointRadius: 5, 
+					pointBackgroundColor: '#fff' 
+				}] 
+			},
+			options: { 
+				responsive: true, 
+				maintainAspectRatio: false, 
+				layout: {
+					padding: { left: 5 } // เผื่อพื้นที่ด้านซ้ายเล็กน้อย
+				},
+				scales: { 
+					y: { 
+						position: 'left', // ตรึงไว้ด้านซ้าย
+						afterFit: (axis) => {
+							axis.width = 45; // ล็อคความกว้างให้เท่ากับเส้นแบ่งใน CSS
+						},
+						ticks: { 
+							z: 10, // ทำให้ตัวเลขลอยเด่นอยู่เหนือเส้นกราฟ
+							backdropColor: '#0f172a', // สีพื้นหลังตัวเลข (ใช้สีเดียวกับพื้นหลัง Dashboard)
+							showLabelBackdrop: true, // เปิดการใช้สีพื้นหลังเพื่อทับเส้นกราฟเวลาเลื่อนผ่าน
+							color: '#64748b', 
+							font: { size: 10, weight: 'bold' } 
+						}, 
+						grid: { 
+							color: 'rgba(255,255,255,0.03)',
+							drawTicks: false // ซ่อนติ่งขีดสเกลเพื่อให้ดูเนียน
+						} 
+					}, 
+					x: { 
+						grid: { display: false }, 
+						ticks: { color: '#64748b', font: { size: 10, weight: 'bold' } } 
+					} 
+				} 
+			}
+		});
 
         async function init() {
             try {
@@ -314,7 +356,7 @@
                 return `<div class="min-w-[110px] bg-[#111a2d] p-5 rounded-2xl border border-slate-800 text-center">
                     <div class="text-[16px] text-slate-500 font-bold mb-1 uppercase">${l}</div>
                     <div class="text-xl font-bold">${values[i]}</div>
-                    <div class="unit-text text-[10px] text-slate-500 font-bold mt-1 uppercase">${config.unit}</div>
+                    <div class="unit-text text-[12px] text-slate-500 font-bold mt-1 uppercase">${config.unit}</div>
                 </div>`;
             }).join('');
         }
