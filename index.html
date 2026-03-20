@@ -160,7 +160,7 @@
 
         <section class="p-6 rounded-[32px] bg-[#0d1526] border border-slate-800 shadow-2xl mb-8">
             <div class="flex justify-between items-center mb-6">
-                <h3 id="chartTitle" class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-500">แนวโน้ม</h3>
+                <h3 id="chartTitle" class="text-[16px] font-black uppercase tracking-tight text-slate-300">แนวโน้ม</h3>
                 <div class="flex gap-1 bg-slate-900 p-1 rounded-xl">
                     <button id="btn-hourly" onclick="setRange('hourly')" class="btn-range active px-4 py-2 text-[12px]">1วัน</button>
                     <button id="btn-daily" onclick="setRange('daily')" class="btn-range px-4 py-2 text-[12px]">7วัน</button>
@@ -361,7 +361,8 @@
             weatherChart.data.datasets[0].backgroundColor = config.color + '15';
             weatherChart.update();
 
-            document.getElementById('chartTitle').innerText = `พยากรณ์${config.label}`;
+            const rangeText = (currentRange === 'hourly') ? 'รายชั่วโมง' : '7 วัน';
+            document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label}${rangeText} (${config.unit})`;
             document.getElementById('timeBlocks').innerHTML = labels.map((l, i) => {
                 if (values[i] === null) return '';
                 return `<div class="min-w-[110px] bg-[#111a2d] p-5 rounded-2xl border border-slate-800 text-center">
