@@ -361,7 +361,7 @@
             weatherChart.data.datasets[0].backgroundColor = config.color + '15';
             weatherChart.update();
 
-            const rangeText = (currentRange === 'hourly') ? 'รายชั่วโมง' : '7 วัน';
+            const rangeText = (currentRange === 'hourly') ? 'รายชั่วโมง' : ' 7 วัน';
             document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label}${rangeText} (${config.unit})`;
             document.getElementById('timeBlocks').innerHTML = labels.map((l, i) => {
                 if (values[i] === null) return '';
