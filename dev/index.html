@@ -256,7 +256,7 @@
 
         async function init() {
             try {
-                const res = await fetch('weather_data_locations.json?t=' + Date.now());
+                const res = await fetch('../weather_data_locations.json?t=' + Date.now());
                 const json = await res.json();
                 districtData = json.districts;
                 
