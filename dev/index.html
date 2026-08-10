@@ -144,6 +144,7 @@
             <div id="card-wind_ms" onclick="setMetric('wind_ms', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-green-400"><i data-lucide="wind" class="w-4 h-4"></i> <span class="text-base font-black uppercase">แรงลม</span></div>
                 <div class="text-4xl font-bold text-white"><span id="windVal">--</span><span class="text-xs opacity-30 ml-1">m/s</span></div>
+                <div id="windStatus" class="text-[11px] font-bold text-green-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-rain_mm" onclick="setMetric('rain_mm', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-cyan-400"><i data-lucide="cloud-rain" class="w-4 h-4"></i> <span class="text-base font-black uppercase">น้ำฝน</span></div>
@@ -313,6 +314,17 @@
             if (temp <= 22.9) return "อากาศเย็น";
             return "อากาศปกติ";
         }
+        function getWindStatus(speed) {
+            if (speed < 0.3) return "ลมสงบ";
+            if (speed <= 1.5) return "ลมเบา";
+            if (speed <= 3.3) return "ลมโชย";
+            if (speed <= 5.4) return "ลมอ่อน";
+            if (speed <= 7.9) return "ลมปานกลาง";
+            if (speed <= 10.7) return "ลมจัด";
+            if (speed <= 13.8) return "ลมแรง";
+            if (speed <= 17.1) return "ลมแรงมาก";
+            return "พายุลมแรง";
+        }
 
         function updateDashboard() {
             if (!districtData.length) return;
@@ -335,9 +347,10 @@
             document.getElementById('tempStatus').innerText = getTempStatus(parseFloat(matchedData.temp_c));
 
             document.getElementById('humidVal').innerText = parseFloat(matchedData.rh2).toFixed(1);
-            
+
             document.getElementById('windVal').innerText = parseFloat(matchedData.wind_ms).toFixed(1);
-            
+            document.getElementById('windStatus').innerText = getWindStatus(parseFloat(matchedData.wind_ms));
+
             const baseDate = weather[0].datetime.split(' ')[0];
             let todayRainTotal = 0;
             weather.forEach(d => {
