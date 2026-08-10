@@ -143,12 +143,12 @@
                 <div id="humidStatus" class="text-[11px] font-bold text-blue-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-wind_ms" onclick="setMetric('wind_ms', this)" class="stat-card p-5">
-                <div class="flex items-center gap-2 mb-2 text-green-400"><i data-lucide="wind" class="w-4 h-4"></i> <span class="text-base font-black uppercase">แรงลม</span></div>
+                <div class="flex items-center gap-2 mb-2 text-green-400"><i data-lucide="wind" class="w-4 h-4"></i> <span class="text-base font-black uppercase">ความเร็วลม</span></div>
                 <div class="text-4xl font-bold text-white"><span id="windVal">--</span><span class="text-xs opacity-30 ml-1">m/s</span></div>
                 <div id="windStatus" class="text-[11px] font-bold text-green-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-rain_mm" onclick="setMetric('rain_mm', this)" class="stat-card p-5">
-                <div class="flex items-center gap-2 mb-2 text-cyan-400"><i data-lucide="cloud-rain" class="w-4 h-4"></i> <span class="text-base font-black uppercase">น้ำฝน</span></div>
+                <div class="flex items-center gap-2 mb-2 text-cyan-400"><i data-lucide="cloud-rain" class="w-4 h-4"></i> <span class="text-base font-black uppercase">ปริมาณน้ำฝน</span></div>
                 <div class="text-4xl font-bold text-white"><span id="rainVal">--</span><span class="text-xs opacity-30 ml-1">mm</span></div>
                 <div id="rainStatus" class="text-[11px] font-bold text-cyan-400 mt-1 opacity-80">--</div>
             </div>
@@ -195,8 +195,8 @@
         const metricConfig = {
             temp_c: { label: "อุณหภูมิ", unit: "°C", color: "#fb923c" },
             rh2: { label: "ความชื้น", unit: "%", color: "#3b82f6" },
-            wind_ms: { label: "แรงลม", unit: "m/s", color: "#22c55e" },
-            rain_mm: { label: "น้ำฝน", unit: "mm", color: "#22d3ee" },
+            wind_ms: { label: "ความเร็วลม", unit: "m/s", color: "#22c55e" },
+            rain_mm: { label: "ปริมาณน้ำฝน", unit: "mm", color: "#22d3ee" },
             cloud_lv14: { label: "เมฆ", unit: "%", color: "#94a3b8" },
             solar_w: { label: "แสงแดด", unit: "W/m²", color: "#facc15" }
         };
