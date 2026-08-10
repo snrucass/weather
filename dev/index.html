@@ -30,7 +30,7 @@
         }
 
         .chart-inner-container { 
-            min-width: 1200px; 
+            min-width: 1600px; 
             height: 320px; 
         }
 
@@ -303,7 +303,7 @@
 
         function getRainStatus(rain) {
             if (rain === 0) return "ไม่มีฝน";
-            if (rain < 0.1) return "ฝนวัดจำนวนไม่ได้";
+            if (rain < 0.1) return "ฝนเล็กน้อย";
             if (rain <= 10.0) return "ฝนตกเล็กน้อย";
             if (rain <= 35.0) return "ฝนตกปานกลาง";
             if (rain <= 90.0) return "ฝนตกหนัก";
