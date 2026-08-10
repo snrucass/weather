@@ -407,10 +407,10 @@
             let labels = [], values = [];
 
             let rangeText = 'รายชั่วโมง';
-            if (currentRange === 'daily') rangeText = '7 วัน';
-            if (currentRange === '14daily') rangeText = '14 วัน';
+            if (currentRange === 'daily') rangeText = ' 7 วัน';
+            if (currentRange === '14daily') rangeText = ' 14 วัน';
             
-            document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label}${rangeText} (${config.unit})`;
+            document.getElementById('chartTitle').innerText = `การเปลี่ยนแปลง${config.label}${rangeText} (${config.unit})`;
 
             if (currentRange === 'hourly') {
                 labels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
