@@ -224,7 +224,7 @@
                         color: '#ffffff',
                         offset: 8,
                         font: { size: 12, weight: 'bold' },
-                        formatter: (value) => value !== null ? parseFloat(value).toFixed(1) : ''
+                        formatter: (value) => value !== null ? parseFloat(value).toFixed(2) : ''
                     }
                 },
                 layout: {
@@ -341,7 +341,7 @@
                 weatherArray.forEach(d => {
                     if (d.datetime.startsWith(baseDate)) {
                         const localH = (parseInt(d.datetime.split(' ')[1].split(':')[0]) + 7) % 24;
-                        values[localH] = d[currentMetric];
+                        values[localH] = d[currentMetric] !== null ? parseFloat(d[currentMetric]).toFixed(2) : null;
                     }
                 });
             } else {
@@ -364,9 +364,9 @@
                     //values.push(dayMap[k] && dayMap[k].c > 0 ? (dayMap[k].s / dayMap[k].c).toFixed(1) : null);
                     if (dayMap[k] && dayMap[k].c > 0) {
                         if (currentMetric === 'rain_mm') {
-                            values.push(dayMap[k].s.toFixed(1)); // คิดฝนสะสม 24 ชม.
+                            values.push(dayMap[k].s.toFixed(2)); // คิดฝนสะสม 24 ชม.
                         } else {
-                            values.push((dayMap[k].s / dayMap[k].c).toFixed(1)); // คิดค่าเฉลี่ย
+                            values.push((dayMap[k].s / dayMap[k].c).toFixed(2)); // คิดค่าเฉลี่ย
                         }
                     } else {
                         values.push(null);
