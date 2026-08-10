@@ -164,6 +164,7 @@
                 <div class="flex gap-1 bg-slate-900 p-1 rounded-xl">
                     <button id="btn-hourly" onclick="setRange('hourly')" class="btn-range active px-4 py-2 text-[12px]">1วัน</button>
                     <button id="btn-daily" onclick="setRange('daily')" class="btn-range px-4 py-2 text-[12px]">7วัน</button>
+                    <button id="btn-14daily" onclick="setRange('14daily')" class="btn-range px-3 py-2 text-[12px]">14วัน</button>
                 </div>
             </div>
             <div class="relative h-[320px] overflow-hidden">
@@ -327,6 +328,12 @@
             const config = metricConfig[currentMetric];
             let labels = [], values = [];
 
+            let rangeText = 'รายชั่วโมง';
+            if (currentRange === 'daily') rangeText = '7 วัน';
+            if (currentRange === '14daily') rangeText = '14 วัน';
+            
+            document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label}${rangeText} (${config.unit})`;
+
             if (currentRange === 'hourly') {
                 labels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
                 values = new Array(24).fill(null);
@@ -347,6 +354,9 @@
                     const v = parseFloat(d[currentMetric]);
                     if (!isNaN(v)) { dayMap[k].s += v; dayMap[k].c++; }
                 });
+
+                const targetDays = (currentRange === '14daily') ? 14 : 7;
+
                 for (let i = 0; i < 7; i++) {
                     const d = new Date(); d.setDate(d.getDate() + i);
                     const k = d.toLocaleDateString('en-CA');
@@ -358,11 +368,11 @@
             weatherChart.data.labels = labels;
             weatherChart.data.datasets[0].data = values;
             weatherChart.data.datasets[0].borderColor = config.color;
-            weatherChart.data.datasets[0].backgroundColor = config.color + '15';
+            weatherChart.data.datasets[0].backgroundColor = config.color + '25';
             weatherChart.update();
 
-            const rangeText = (currentRange === 'hourly') ? 'รายชั่วโมง' : ' 7 วัน';
-            document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label}${rangeText} (${config.unit})`;
+            //const rangeText = (currentRange === 'hourly') ? 'รายชั่วโมง' : ' 7 วัน';
+            //document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label}${rangeText} (${config.unit})`;
             document.getElementById('timeBlocks').innerHTML = labels.map((l, i) => {
                 if (values[i] === null) return '';
                 return `<div class="min-w-[110px] bg-[#111a2d] p-5 rounded-2xl border border-slate-800 text-center">
@@ -385,6 +395,7 @@
             currentRange = r;
             document.getElementById('btn-hourly').className = (r === 'hourly') ? "btn-range active px-4 py-2 text-[12px]" : "btn-range px-4 py-2 text-[12px]";
             document.getElementById('btn-daily').className = (r === 'daily') ? "btn-range active px-4 py-2 text-[12px]" : "btn-range px-4 py-2 text-[12px]";
+            document.getElementById('btn-14daily').className = (r === '14daily') ? "btn-range active px-3 py-2 text-[12px]" : "btn-range px-3 py-2 text-[12px]";
             updateDashboard();
         }
 
