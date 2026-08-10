@@ -155,6 +155,7 @@
             <div id="card-cloud_lv14" onclick="setMetric('cloud_lv14', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-slate-400"><i data-lucide="cloud" class="w-4 h-4"></i> <span class="text-base font-black uppercase">เมฆ</span></div>
                 <div class="text-4xl font-bold text-white"><span id="cloudVal">--</span><span class="text-lg opacity-30">%</span></div>
+                <div id="cloudStatus" class="text-[11px] font-bold text-slate-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-solar_w" onclick="setMetric('solar_w', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-yellow-400"><i data-lucide="sun" class="w-4 h-4"></i> <span class="text-base font-black uppercase">แสงแดด</span></div>
@@ -342,6 +343,13 @@
             if (rh <= 85) return "ชื้นสูง";
             return "ชื้นสูงมาก";
         }
+        function getCloudStatus(cloud) {
+            if (cloud <= 10) return "แจ่มใส";
+            if (cloud <= 35) return "เมฆบางส่วน";
+            if (cloud <= 75) return "เมฆเป็นส่วนมาก";
+            if (cloud <= 90) return "เมฆมาก";
+            return "เมฆเต็มท้องฟ้า";
+        }
 
         function updateDashboard() {
             if (!districtData.length) return;
@@ -385,7 +393,8 @@
             document.getElementById('rainStatus').innerText = getRainStatus(todayRainTotal);
 
             document.getElementById('cloudVal').innerText = parseFloat(matchedData.cloud_lv14).toFixed(0);
-            
+            document.getElementById('cloudStatus').innerText = getCloudStatus(parseFloat(matchedData.cloud_lv14));
+
             const solar = (curH < 6 || curH > 18) ? 0 : parseFloat(matchedData.solar_w || 0);
             document.getElementById('solarVal').innerText = solar.toFixed(0);
             document.getElementById('solarStatus').innerText = getSolarStatus(solar);
