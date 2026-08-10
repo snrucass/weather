@@ -444,7 +444,11 @@
                     const k = dt.toLocaleDateString('en-CA');
                     if (!dayMap[k]) dayMap[k] = { s: 0, c: 0 };
                     const v = parseFloat(d[currentMetric]);
-                    if (!isNaN(v)) { dayMap[k].s += v; dayMap[k].c++; }
+                    if (!isNaN(v)) { 
+                        dayMap[k].s += v; 
+                        dayMap[k].c++;
+                        if (v > dayMap[k].max) dayMap[k].max = v; 
+                    }
                 });
 
                 const targetDays = (currentRange === '14daily') ? 14 : 7;
@@ -457,6 +461,8 @@
                     if (dayMap[k] && dayMap[k].c > 0) {
                         if (currentMetric === 'rain_mm') {
                             values.push(dayMap[k].s.toFixed(2)); // คิดฝนสะสม 24 ชม.
+                        } else if (currentMetric === 'solar_w') {
+                            values.push(dayMap[k].max.toFixed(0));
                         } else {
                             values.push((dayMap[k].s / dayMap[k].c).toFixed(2)); // คิดค่าเฉลี่ย
                         }
