@@ -342,9 +342,9 @@
                 weatherArray.forEach(d => {
                     if (d.datetime.startsWith(baseDate)) {
                         const localH = (parseInt(d.datetime.split(' ')[1].split(':')[0]) + 7) % 24;
-                        values[localH] = d[currentMetric] !== null ? parseFloat(d[currentMetric]).toFixed(2) : null;
-                        //const rawVal = parseFloat(d[currentMetric]);
-                        //hourlyRaw[localH] = !isNaN(rawVal) ? rawVal : 0;
+                        //values[localH] = d[currentMetric] !== null ? parseFloat(d[currentMetric]).toFixed(2) : null;
+                        const rawVal = parseFloat(d[currentMetric]);
+                        hourlyRaw[localH] = !isNaN(rawVal) ? rawVal : 0;
                     }
                 });
                 if (currentMetric === 'rain_mm') {
