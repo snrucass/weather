@@ -361,7 +361,16 @@
                     const d = new Date(); d.setDate(d.getDate() + i);
                     const k = d.toLocaleDateString('en-CA');
                     labels.push(d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
-                    values.push(dayMap[k] && dayMap[k].c > 0 ? (dayMap[k].s / dayMap[k].c).toFixed(1) : null);
+                    //values.push(dayMap[k] && dayMap[k].c > 0 ? (dayMap[k].s / dayMap[k].c).toFixed(1) : null);
+                    if (dayMap[k] && dayMap[k].c > 0) {
+                        if (currentMetric === 'rain_mm') {
+                            values.push(dayMap[k].s.toFixed(1)); // คิดฝนสะสม 24 ชม.
+                        } else {
+                            values.push((dayMap[k].s / dayMap[k].c).toFixed(1)); // คิดค่าเฉลี่ย
+                        }
+                    } else {
+                        values.push(null);
+                    }
                 }
             }
 
