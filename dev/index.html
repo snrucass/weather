@@ -442,7 +442,7 @@
                     let dt = new Date(d.datetime.replace(" ", "T") + "Z");
                     dt.setHours(dt.getHours() + 7);
                     const k = dt.toLocaleDateString('en-CA');
-                    if (!dayMap[k]) dayMap[k] = { s: 0, c: 0 };
+                    if (!dayMap[k]) dayMap[k] = { s: 0, c: 0, max: 0};
                     const v = parseFloat(d[currentMetric]);
                     if (!isNaN(v)) { 
                         dayMap[k].s += v; 
