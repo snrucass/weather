@@ -135,6 +135,7 @@
             <div id="card-temp_c" onclick="setMetric('temp_c', this)" class="stat-card p-5 active-card-temp">
                 <div class="flex items-center gap-2 mb-2 text-orange-400"><i data-lucide="thermometer" class="w-4 h-4"></i> <span class="text-base font-black uppercase">อุณหภูมิ</span></div>
                 <div class="text-4xl font-bold text-white"><span id="tempVal">--</span><span class="text-lg opacity-30">°C</span></div>
+                <div id="tempStatus" class="text-[11px] font-bold text-orange-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-rh2" onclick="setMetric('rh2', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-blue-400"><i data-lucide="droplets" class="w-4 h-4"></i> <span class="text-base font-black uppercase">ความชื้น</span></div>
@@ -304,6 +305,14 @@
             if (rain <= 90.0) return "ฝนตกหนัก";
             return "ฝนตกหนักมาก";
         }
+        function getTempStatus(temp) {
+            if (temp >= 40.0) return "อากาศร้อนจัด";
+            if (temp >= 35.0) return "อากาศร้อน";
+            if (temp <= 7.9) return "อากาศหนาวจัด";
+            if (temp <= 15.9) return "อากาศหนาว";
+            if (temp <= 22.9) return "อากาศเย็น";
+            return "อากาศปกติ";
+        }
 
         function updateDashboard() {
             if (!districtData.length) return;
@@ -323,7 +332,10 @@
             document.getElementById('currentTimeDisp').innerText = `SYNCED: ${now.toLocaleTimeString('th-TH')}`;
 
             document.getElementById('tempVal').innerText = parseFloat(matchedData.temp_c).toFixed(1);
+            document.getElementById('tempStatus').innerText = getTempStatus(parseFloat(matchedData.temp_c));
+
             document.getElementById('humidVal').innerText = parseFloat(matchedData.rh2).toFixed(1);
+            
             document.getElementById('windVal').innerText = parseFloat(matchedData.wind_ms).toFixed(1);
             
             const baseDate = weather[0].datetime.split(' ')[0];
@@ -340,7 +352,7 @@
             document.getElementById('rainVal').innerText = todayRainTotal.toFixed(2);
             //document.getElementById('rainVal').innerText = parseFloat(matchedData.rain_mm).toFixed(2);
             document.getElementById('rainStatus').innerText = getRainStatus(todayRainTotal);
-            
+
             document.getElementById('cloudVal').innerText = parseFloat(matchedData.cloud_lv14).toFixed(0);
             
             const solar = (curH < 6 || curH > 18) ? 0 : parseFloat(matchedData.solar_w || 0);
