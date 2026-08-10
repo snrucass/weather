@@ -315,7 +315,7 @@
             document.getElementById('tempVal').innerText = parseFloat(matchedData.temp_c).toFixed(1);
             document.getElementById('humidVal').innerText = parseFloat(matchedData.rh2).toFixed(1);
             document.getElementById('windVal').innerText = parseFloat(matchedData.wind_ms).toFixed(1);
-            document.getElementById('rainVal').innerText = parseFloat(matchedData.rain_mm).toFixed(1);
+            document.getElementById('rainVal').innerText = parseFloat(matchedData.rain_mm).toFixed(2);
             document.getElementById('cloudVal').innerText = parseFloat(matchedData.cloud_lv14).toFixed(0);
             
             const solar = (curH < 6 || curH > 18) ? 0 : parseFloat(matchedData.solar_w || 0);
