@@ -135,26 +135,32 @@
             <div id="card-temp_c" onclick="setMetric('temp_c', this)" class="stat-card p-5 active-card-temp">
                 <div class="flex items-center gap-2 mb-2 text-orange-400"><i data-lucide="thermometer" class="w-4 h-4"></i> <span class="text-base font-black uppercase">อุณหภูมิ</span></div>
                 <div class="text-4xl font-bold text-white"><span id="tempVal">--</span><span class="text-lg opacity-30">°C</span></div>
+                <div id="tempStatus" class="text-[11px] font-bold text-orange-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-rh2" onclick="setMetric('rh2', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-blue-400"><i data-lucide="droplets" class="w-4 h-4"></i> <span class="text-base font-black uppercase">ความชื้น</span></div>
                 <div class="text-4xl font-bold text-white"><span id="humidVal">--</span><span class="text-lg opacity-30">%</span></div>
+                <div id="humidStatus" class="text-[11px] font-bold text-blue-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-wind_ms" onclick="setMetric('wind_ms', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-green-400"><i data-lucide="wind" class="w-4 h-4"></i> <span class="text-base font-black uppercase">แรงลม</span></div>
                 <div class="text-4xl font-bold text-white"><span id="windVal">--</span><span class="text-xs opacity-30 ml-1">m/s</span></div>
+                <div id="windStatus" class="text-[11px] font-bold text-green-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-rain_mm" onclick="setMetric('rain_mm', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-cyan-400"><i data-lucide="cloud-rain" class="w-4 h-4"></i> <span class="text-base font-black uppercase">น้ำฝน</span></div>
                 <div class="text-4xl font-bold text-white"><span id="rainVal">--</span><span class="text-xs opacity-30 ml-1">mm</span></div>
+                <div id="rainStatus" class="text-[11px] font-bold text-cyan-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-cloud_lv14" onclick="setMetric('cloud_lv14', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-slate-400"><i data-lucide="cloud" class="w-4 h-4"></i> <span class="text-base font-black uppercase">เมฆ</span></div>
                 <div class="text-4xl font-bold text-white"><span id="cloudVal">--</span><span class="text-lg opacity-30">%</span></div>
+                <div id="cloudStatus" class="text-[11px] font-bold text-slate-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-solar_w" onclick="setMetric('solar_w', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-yellow-400"><i data-lucide="sun" class="w-4 h-4"></i> <span class="text-base font-black uppercase">แสงแดด</span></div>
                 <div class="text-4xl font-bold text-white"><span id="solarVal">--</span><span class="text-[10px] opacity-30 ml-1">W/m²</span></div>
+                <div id="solarStatus" class="text-[11px] font-bold text-yellow-400 mt-1 opacity-80">--</div>
             </div>
         </section>
 
@@ -164,6 +170,7 @@
                 <div class="flex gap-1 bg-slate-900 p-1 rounded-xl">
                     <button id="btn-hourly" onclick="setRange('hourly')" class="btn-range active px-4 py-2 text-[12px]">1วัน</button>
                     <button id="btn-daily" onclick="setRange('daily')" class="btn-range px-4 py-2 text-[12px]">7วัน</button>
+                    <button id="btn-14daily" onclick="setRange('14daily')" class="btn-range px-3 py-2 text-[12px]">14วัน</button>
                 </div>
             </div>
             <div class="relative h-[320px] overflow-hidden">
@@ -223,7 +230,7 @@
                         color: '#ffffff',
                         offset: 8,
                         font: { size: 12, weight: 'bold' },
-                        formatter: (value) => value !== null ? parseFloat(value).toFixed(1) : ''
+                        formatter: (value) => value !== null ? parseFloat(value).toFixed(2) : ''
                     }
                 },
                 layout: {
@@ -256,7 +263,7 @@
 
         async function init() {
             try {
-                const res = await fetch('weather_data_locations.json?t=' + Date.now());
+                const res = await fetch('../weather_data_locations.json?t=' + Date.now());
                 const json = await res.json();
                 districtData = json.districts;
                 
@@ -294,6 +301,56 @@
             document.querySelectorAll(".dropdown-content").forEach(d => d.style.display = 'none');
         }
 
+        function getRainStatus(rain) {
+            if (rain === 0) return "ไม่มีฝน";
+            if (rain < 0.1) return "ฝนเล็กน้อย";
+            if (rain <= 10.0) return "ฝนตกเล็กน้อย";
+            if (rain <= 35.0) return "ฝนตกปานกลาง";
+            if (rain <= 90.0) return "ฝนตกหนัก";
+            return "ฝนตกหนักมาก";
+        }
+        function getTempStatus(temp) {
+            if (temp >= 40.0) return "อากาศร้อนจัด";
+            if (temp >= 35.0) return "อากาศร้อน";
+            if (temp <= 7.9) return "อากาศหนาวจัด";
+            if (temp <= 15.9) return "อากาศหนาว";
+            if (temp <= 22.9) return "อากาศเย็น";
+            return "อากาศปกติ";
+        }
+        function getWindStatus(speed) {
+            if (speed < 0.3) return "ลมสงบ";
+            if (speed <= 1.5) return "ลมเบา";
+            if (speed <= 3.3) return "ลมโชย";
+            if (speed <= 5.4) return "ลมอ่อน";
+            if (speed <= 7.9) return "ลมปานกลาง";
+            if (speed <= 10.7) return "ลมจัด";
+            if (speed <= 13.8) return "ลมแรง";
+            if (speed <= 17.1) return "ลมแรงมาก";
+            return "พายุลมแรง";
+        }
+        function getSolarStatus(solar) {
+            if (solar === 0) return "ไม่มีแสงแดด";
+            if (solar < 200) return "แดดอ่อนมาก";
+            if (solar < 400) return "แดดอ่อน";
+            if (solar < 700) return "แดดปานกลาง";
+            if (solar < 900) return "แดดจัด";
+            return "แดดจัดมาก";
+        }
+        function getHumidStatus(rh) {
+            if (rh < 40) return "อากาศแห้ง";
+            if (rh <= 60) return "สบายตัว";
+            if (rh <= 75) return "ชื้นปานกลาง";
+            if (rh <= 85) return "ชื้นสูง";
+            return "ชื้นสูงมาก";
+        }
+        function getCloudStatus(cloud) {
+            if (cloud <= 10) return "แจ่มใส";
+            if (cloud <= 35) return "เมฆบางส่วน";
+            if (cloud <= 75) return "เมฆเป็นส่วนมาก";
+            if (cloud <= 90) return "เมฆมาก";
+            return "เมฆเต็มท้องฟ้า";
+        }
+
         function updateDashboard() {
             if (!districtData.length) return;
             const village = districtData[currentDistrictIdx].villages[currentVillageIdx];
@@ -312,13 +369,35 @@
             document.getElementById('currentTimeDisp').innerText = `SYNCED: ${now.toLocaleTimeString('th-TH')}`;
 
             document.getElementById('tempVal').innerText = parseFloat(matchedData.temp_c).toFixed(1);
+            document.getElementById('tempStatus').innerText = getTempStatus(parseFloat(matchedData.temp_c));
+
             document.getElementById('humidVal').innerText = parseFloat(matchedData.rh2).toFixed(1);
+            document.getElementById('humidStatus').innerText = getHumidStatus(parseFloat(matchedData.rh2));
+
             document.getElementById('windVal').innerText = parseFloat(matchedData.wind_ms).toFixed(1);
-            document.getElementById('rainVal').innerText = parseFloat(matchedData.rain_mm).toFixed(1);
+            document.getElementById('windStatus').innerText = getWindStatus(parseFloat(matchedData.wind_ms));
+
+            const baseDate = weather[0].datetime.split(' ')[0];
+            let todayRainTotal = 0;
+            weather.forEach(d => {
+                if (d.datetime.startsWith(baseDate)) {
+                    const localH = (parseInt(d.datetime.split(' ')[1].split(':')[0]) + 7) % 24;
+                    if (localH <= curH) {
+                        const rVal = parseFloat(d.rain_mm);
+                        if (!isNaN(rVal)) todayRainTotal += rVal;
+                    }
+                }
+            });
+            document.getElementById('rainVal').innerText = todayRainTotal.toFixed(2);
+            //document.getElementById('rainVal').innerText = parseFloat(matchedData.rain_mm).toFixed(2);
+            document.getElementById('rainStatus').innerText = getRainStatus(todayRainTotal);
+
             document.getElementById('cloudVal').innerText = parseFloat(matchedData.cloud_lv14).toFixed(0);
-            
+            document.getElementById('cloudStatus').innerText = getCloudStatus(parseFloat(matchedData.cloud_lv14));
+
             const solar = (curH < 6 || curH > 18) ? 0 : parseFloat(matchedData.solar_w || 0);
             document.getElementById('solarVal').innerText = solar.toFixed(0);
+            document.getElementById('solarStatus').innerText = getSolarStatus(solar);
 
             renderWeatherChart(weather);
         }
@@ -327,42 +406,80 @@
             const config = metricConfig[currentMetric];
             let labels = [], values = [];
 
+            let rangeText = 'รายชั่วโมง';
+            if (currentRange === 'daily') rangeText = '7 วัน';
+            if (currentRange === '14daily') rangeText = '14 วัน';
+            
+            document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label}${rangeText} (${config.unit})`;
+
             if (currentRange === 'hourly') {
                 labels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
                 values = new Array(24).fill(null);
                 const baseDate = weatherArray[0].datetime.split(' ')[0];
+                const hourlyRaw = new Array(24).fill(0);
                 weatherArray.forEach(d => {
                     if (d.datetime.startsWith(baseDate)) {
                         const localH = (parseInt(d.datetime.split(' ')[1].split(':')[0]) + 7) % 24;
-                        values[localH] = d[currentMetric];
+                        //values[localH] = d[currentMetric] !== null ? parseFloat(d[currentMetric]).toFixed(2) : null;
+                        const rawVal = parseFloat(d[currentMetric]);
+                        hourlyRaw[localH] = !isNaN(rawVal) ? rawVal : 0;
                     }
                 });
+                if (currentMetric === 'rain_mm') {
+                    let runningTotal = 0;
+                    for (let h = 0; h < 24; h++) {
+                        runningTotal += hourlyRaw[h]; // บวกสะสมชั่วโมงปัจจุบันทบเข้าไป
+                        values[h] = runningTotal.toFixed(2);
+                    }
+                } else {
+                    for (let h = 0; h < 24; h++) {
+                        values[h] = hourlyRaw[h].toFixed(2);
+                    }
+                }
             } else {
                 const dayMap = {};
                 weatherArray.forEach(d => {
                     let dt = new Date(d.datetime.replace(" ", "T") + "Z");
                     dt.setHours(dt.getHours() + 7);
                     const k = dt.toLocaleDateString('en-CA');
-                    if (!dayMap[k]) dayMap[k] = { s: 0, c: 0 };
+                    if (!dayMap[k]) dayMap[k] = { s: 0, c: 0, max: 0};
                     const v = parseFloat(d[currentMetric]);
-                    if (!isNaN(v)) { dayMap[k].s += v; dayMap[k].c++; }
+                    if (!isNaN(v)) { 
+                        dayMap[k].s += v; 
+                        dayMap[k].c++;
+                        if (v > dayMap[k].max) dayMap[k].max = v; 
+                    }
                 });
-                for (let i = 0; i < 7; i++) {
+
+                const targetDays = (currentRange === '14daily') ? 14 : 7;
+
+                for (let i = 0; i < targetDays; i++) {
                     const d = new Date(); d.setDate(d.getDate() + i);
                     const k = d.toLocaleDateString('en-CA');
                     labels.push(d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
-                    values.push(dayMap[k] && dayMap[k].c > 0 ? (dayMap[k].s / dayMap[k].c).toFixed(1) : null);
+                    //values.push(dayMap[k] && dayMap[k].c > 0 ? (dayMap[k].s / dayMap[k].c).toFixed(1) : null);
+                    if (dayMap[k] && dayMap[k].c > 0) {
+                        if (currentMetric === 'rain_mm') {
+                            values.push(dayMap[k].s.toFixed(2)); // คิดฝนสะสม 24 ชม.
+                        } else if (currentMetric === 'solar_w') {
+                            values.push(dayMap[k].max.toFixed(0));
+                        } else {
+                            values.push((dayMap[k].s / dayMap[k].c).toFixed(2)); // คิดค่าเฉลี่ย
+                        }
+                    } else {
+                        values.push(null);
+                    }
                 }
             }
 
             weatherChart.data.labels = labels;
             weatherChart.data.datasets[0].data = values;
             weatherChart.data.datasets[0].borderColor = config.color;
-            weatherChart.data.datasets[0].backgroundColor = config.color + '15';
+            weatherChart.data.datasets[0].backgroundColor = config.color + '25';
             weatherChart.update();
 
-            const rangeText = (currentRange === 'hourly') ? 'รายชั่วโมง' : ' 7 วัน';
-            document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label}${rangeText} (${config.unit})`;
+            //const rangeText = (currentRange === 'hourly') ? 'รายชั่วโมง' : ' 7 วัน';
+            //document.getElementById('chartTitle').innerText = `แนวโน้ม${config.label}${rangeText} (${config.unit})`;
             document.getElementById('timeBlocks').innerHTML = labels.map((l, i) => {
                 if (values[i] === null) return '';
                 return `<div class="min-w-[110px] bg-[#111a2d] p-5 rounded-2xl border border-slate-800 text-center">
@@ -385,6 +502,7 @@
             currentRange = r;
             document.getElementById('btn-hourly').className = (r === 'hourly') ? "btn-range active px-4 py-2 text-[12px]" : "btn-range px-4 py-2 text-[12px]";
             document.getElementById('btn-daily').className = (r === 'daily') ? "btn-range active px-4 py-2 text-[12px]" : "btn-range px-4 py-2 text-[12px]";
+            document.getElementById('btn-14daily').className = (r === '14daily') ? "btn-range active px-3 py-2 text-[12px]" : "btn-range px-3 py-2 text-[12px]";
             updateDashboard();
         }
 
