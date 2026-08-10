@@ -338,12 +338,25 @@
                 labels = Array.from({length: 24}, (_, i) => `${i.toString().padStart(2, '0')}:00`);
                 values = new Array(24).fill(null);
                 const baseDate = weatherArray[0].datetime.split(' ')[0];
+                const hourlyRaw = new Array(24).fill(0);
                 weatherArray.forEach(d => {
                     if (d.datetime.startsWith(baseDate)) {
                         const localH = (parseInt(d.datetime.split(' ')[1].split(':')[0]) + 7) % 24;
                         values[localH] = d[currentMetric] !== null ? parseFloat(d[currentMetric]).toFixed(2) : null;
+                        hourlyRaw[localH] = !isNaN(val) ? val : 0;
                     }
                 });
+                if (currentMetric === 'rain_mm') {
+                    let runningTotal = 0;
+                    for (let h = 0; h < 24; h++) {
+                        runningTotal += hourlyRaw[h]; // บวกสะสมชั่วโมงปัจจุบันทบเข้าไป
+                        values[h] = runningTotal.toFixed(2);
+                    }
+                } else {
+                    for (let h = 0; h < 24; h++) {
+                        values[h] = hourlyRaw[h].toFixed(2);
+                    }
+                }
             } else {
                 const dayMap = {};
                 weatherArray.forEach(d => {
