@@ -357,7 +357,7 @@
 
                 const targetDays = (currentRange === '14daily') ? 14 : 7;
 
-                for (let i = 0; i < 7; i++) {
+                for (let i = 0; i < targetDays; i++) {
                     const d = new Date(); d.setDate(d.getDate() + i);
                     const k = d.toLocaleDateString('en-CA');
                     labels.push(d.toLocaleDateString('th-TH', {day:'numeric', month:'short'}));
