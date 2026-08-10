@@ -140,6 +140,7 @@
             <div id="card-rh2" onclick="setMetric('rh2', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-blue-400"><i data-lucide="droplets" class="w-4 h-4"></i> <span class="text-base font-black uppercase">ความชื้น</span></div>
                 <div class="text-4xl font-bold text-white"><span id="humidVal">--</span><span class="text-lg opacity-30">%</span></div>
+                <div id="humidStatus" class="text-[11px] font-bold text-blue-400 mt-1 opacity-80">--</div>
             </div>
             <div id="card-wind_ms" onclick="setMetric('wind_ms', this)" class="stat-card p-5">
                 <div class="flex items-center gap-2 mb-2 text-green-400"><i data-lucide="wind" class="w-4 h-4"></i> <span class="text-base font-black uppercase">แรงลม</span></div>
@@ -334,6 +335,13 @@
             if (solar < 900) return "แดดจัด";
             return "แดดจัดมาก";
         }
+        function getHumidStatus(rh) {
+            if (rh < 40) return "อากาศแห้ง";
+            if (rh <= 60) return "สบายตัว";
+            if (rh <= 75) return "ชื้นปานกลาง";
+            if (rh <= 85) return "ชื้นสูง";
+            return "ชื้นสูงมาก";
+        }
 
         function updateDashboard() {
             if (!districtData.length) return;
@@ -356,6 +364,7 @@
             document.getElementById('tempStatus').innerText = getTempStatus(parseFloat(matchedData.temp_c));
 
             document.getElementById('humidVal').innerText = parseFloat(matchedData.rh2).toFixed(1);
+            document.getElementById('humidStatus').innerText = getHumidStatus(parseFloat(matchedData.rh2));
 
             document.getElementById('windVal').innerText = parseFloat(matchedData.wind_ms).toFixed(1);
             document.getElementById('windStatus').innerText = getWindStatus(parseFloat(matchedData.wind_ms));
